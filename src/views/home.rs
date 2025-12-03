@@ -8,7 +8,7 @@ pub fn Home() -> Element {
             div { class: "section",
                 h1 { class: "title", "Reading Worksheet" }
                 h2 { class: "subtitle", "Chapter 1" }
-                table { class: "table",
+                table { class: "table is-fullwidth",
                     thead {
                         tr {
                             th { "Number" }
@@ -19,7 +19,7 @@ pub fn Home() -> Element {
                     }
                     tbody {
                         tr {
-                            td {
+                            td { class: "is-narrow",
                                 label { class: "label is-large", "1" }
                             }
                             td {
