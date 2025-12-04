@@ -11,7 +11,7 @@ pub fn Navbar() -> Element {
             div { class: "navbar-brand",
                 Link{ class: "navbar-item", to: Route::Home{}, img { src: LOGO_IMG, }}
             }
-            div { class: "navbar-menu",
+            div { class: "navbar-menu is-active",
                 div { class: "navbar-start",
                     Link{ class: "navbar-item", to: Route::Home{}, "Home"}
                     Link{ class: "navbar-item", to: Route::Blog { id: 1 }, "Blog"}
