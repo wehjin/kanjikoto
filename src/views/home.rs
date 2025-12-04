@@ -1,20 +1,14 @@
+use crate::core::drill_point::DrillPoint;
 use dioxus::prelude::*;
 
-pub struct KanjiPoint {
-    pub chapter: usize,
-    pub furi: String,
-    pub meaning: String,
-    pub kanji: String,
-    pub yomi: String,
-}
-
-pub struct ReadingPoint {
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct WorksheetRow {
     pub index: usize,
-    pub kanji_point: KanjiPoint,
+    pub kanji_point: DrillPoint,
 }
 
-impl ReadingPoint {
-    pub fn new(index: usize, kanji_point: KanjiPoint) -> Self {
+impl WorksheetRow {
+    pub fn new(index: usize, kanji_point: DrillPoint) -> Self {
         Self { index, kanji_point }
     }
     pub fn meaning(&self) -> String {
@@ -23,92 +17,88 @@ impl ReadingPoint {
     pub fn kanji(&self) -> String {
         self.kanji_point.kanji.clone()
     }
+    pub fn yomi(&self) -> String {
+        self.kanji_point.yomi.clone()
+    }
 }
 
-impl KanjiPoint {
-    pub fn new(chapter: usize, furi: impl AsRef<str>, meaning: impl AsRef<str>) -> Self {
-        let furi = furi.as_ref().to_string();
-        let meaning = meaning.as_ref().to_string();
-        let mut kanji_segments = Vec::new();
-        let mut yomi_segments = Vec::new();
-        for segment in furi.split("）") {
-            let kanji_yomi = segment.split("（").collect::<Vec<&str>>();
-            match kanji_yomi.len() {
-                2 => {
-                    kanji_segments.push(kanji_yomi[0].to_string());
-                    yomi_segments.push(kanji_yomi[1].to_string());
+#[component]
+fn Worksheets(drills: Vec<DrillPoint>) -> Element {
+    let rows = drills
+        .into_iter()
+        .enumerate()
+        .map(|(index, point)| WorksheetRow::new(index, point))
+        .collect::<Vec<_>>();
+    rsx! {
+        div { class: "section",
+            h1 { class: "title", "Worksheet" }
+            h2 { class: "subtitle", "Chapter 1" }
+            table { class: "table is-fullwidth",
+                thead {
+                    tr {
+                        th { "Number" }
+                        th { "Yomi" }
+                        th { "Meaning" }
+                        th { "Kanji" }
+                    }
                 }
-                1 => {
-                    let kana = kanji_yomi[0].to_string();
-                    kanji_segments.push(kana.clone());
-                    yomi_segments.push(kana);
+                tbody {
+                    for row in rows.iter() {
+                        ReadingRow{index: row.index, kanji: row.kanji()}
+                    }
                 }
-                _ => panic!("Invalid furi segment: {}", segment),
             }
         }
-        Self {
-            chapter,
-            furi,
-            meaning,
-            kanji: kanji_segments.join(""),
-            yomi: yomi_segments.join(""),
+        div { class: "section",
+            h1 { class: "title", "Glossary" }
+            h2 { class: "subtitle", "Chapter 1" }
+            table { class: "table is-fullwidth",
+                thead {
+                    tr {
+                        th { class: "is-narrow", "Number" }
+                        th { "Meaning" }
+                    }
+                }
+                tbody {
+                    for row in rows.iter() {
+                        GlossaryRow{index: row.index, meaning: row.meaning()}
+                    }
+                }
+            }
+        }
+        div { class: "section",
+            h1 { class: "title", "Pronunciation" }
+            h2 { class: "subtitle", "Chapter 1" }
+            table { class: "table is-fullwidth",
+                thead {
+                    tr {
+                        th { class: "is-narrow", "Number" }
+                        th { "Yomi" }
+                    }
+                }
+                tbody {
+                    for row in rows.iter() {
+                        YomiRow{index: row.index, yomi: row.yomi()}
+                    }
+                }
+            }
         }
     }
 }
 
 #[component]
 pub fn Home() -> Element {
-    let points = vec![
-        KanjiPoint::new(1, "始（はじ）まり", "the beginning"),
-        KanjiPoint::new(
+    let drills = vec![
+        DrillPoint::new(1, "始（はじ）まり", "the beginning"),
+        DrillPoint::new(
             1,
             "幸（こう）か（）不（ふ）幸（こう）か",
             "for better or worse, lucky or unlucky",
         ),
     ];
-    let points = points
-        .into_iter()
-        .enumerate()
-        .map(|(index, point)| ReadingPoint::new(index, point))
-        .collect::<Vec<_>>();
     rsx! {
         div { class: "container",
-            div { class: "section",
-                h1 { class: "title", "Reading Worksheet" }
-                h2 { class: "subtitle", "Chapter 1" }
-                table { class: "table is-fullwidth",
-                    thead {
-                        tr {
-                            th { "Number" }
-                            th { "Yomi" }
-                            th { "Meaning" }
-                            th { "Kanji" }
-                        }
-                    }
-                    tbody {
-                        for point in points.iter() {
-                            ReadingRow{index: point.index, kanji: point.kanji()}
-                        }
-                    }
-                }
-            }
-            div { class: "section",
-                h1 { class: "title", "Glossary" }
-                h2 { class: "subtitle", "Chapter 1" }
-                table { class: "table is-fullwidth",
-                    thead {
-                        tr {
-                            th { class: "is-narrow", "Number" }
-                            th { "Meaning" }
-                        }
-                    }
-                    tbody {
-                        for point in points.iter() {
-                            GlossaryRow{index: point.index, meaning: point.meaning()}
-                        }
-                    }
-                }
-            }
+            Worksheets{ drills }
         }
     }
 }
@@ -145,6 +135,22 @@ fn GlossaryRow(index: usize, meaning: String) -> Element {
             }
             td {
                 p { class: "is-size-5", "{meaning}" }
+            }
+        }
+    }
+}
+
+#[component]
+fn YomiRow(index: usize, yomi: String) -> Element {
+    let number = index + 1;
+    rsx! {
+        tr {
+            class: "field",
+            td { class: "is-narrow",
+                p { class: "is-size-5", "{number}" }
+            }
+            td {
+                p { class: "is-size-5", "{yomi}" }
             }
         }
     }

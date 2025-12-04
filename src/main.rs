@@ -1,12 +1,11 @@
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
 use dioxus::prelude::*;
-
-use components::Hero;
 use views::{Blog, Home, Navbar, Start};
 
 /// Define a components module that contains all shared components for our app.
 mod components;
+mod core;
 /// Define a views module that contains the UI for all Layouts and Routes for our app.
 mod views;
 
@@ -38,8 +37,6 @@ enum Route {
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
 // The macro returns an `Asset` type that will display as the path to the asset in the browser or a local path in desktop bundles.
 const FAVICON: Asset = asset!("/assets/favicon.ico");
-// The asset macro also minifies some assets like CSS and JS to make bundled smaller
-const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 
 fn main() {
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
