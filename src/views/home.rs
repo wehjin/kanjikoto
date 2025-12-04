@@ -61,6 +61,7 @@ fn Worksheets(drills: Vec<DrillPoint>) -> Element {
             }
         }
         div { class: "section",
+            style: "page-break-before: always; break-before: page;",
             h1 { class: "title", "Glossary" }
             h2 { class: "subtitle", "Chapter 1" }
             table { class: "table is-fullwidth",
@@ -78,6 +79,7 @@ fn Worksheets(drills: Vec<DrillPoint>) -> Element {
             }
         }
         div { class: "section",
+            style: "page-break-before: always; break-before: page;",
             h1 { class: "title", "Pronunciation" }
             h2 { class: "subtitle", "Chapter 1" }
             table { class: "table is-fullwidth",
