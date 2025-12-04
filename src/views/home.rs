@@ -1,5 +1,16 @@
+use crate::core::api;
 use crate::core::drill_point::DrillPoint;
 use dioxus::prelude::*;
+
+#[component]
+pub fn Home() -> Element {
+    let drills = use_resource(|| async move { api::get_drills().await });
+    rsx! {
+        div { class: "container",
+            Worksheets{ drills: drills.cloned().unwrap_or_default() }
+        }
+    }
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct WorksheetRow {
@@ -82,23 +93,6 @@ fn Worksheets(drills: Vec<DrillPoint>) -> Element {
                     }
                 }
             }
-        }
-    }
-}
-
-#[component]
-pub fn Home() -> Element {
-    let drills = vec![
-        DrillPoint::new(1, "始（はじ）まり", "the beginning"),
-        DrillPoint::new(
-            1,
-            "幸（こう）か（）不（ふ）幸（こう）か",
-            "for better or worse, lucky or unlucky",
-        ),
-    ];
-    rsx! {
-        div { class: "container",
-            Worksheets{ drills }
         }
     }
 }

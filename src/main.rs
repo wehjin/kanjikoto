@@ -3,10 +3,8 @@
 use dioxus::prelude::*;
 use views::{Blog, Home, Navbar, Start};
 
-/// Define a components module that contains all shared components for our app.
 mod components;
 mod core;
-/// Define a views module that contains the UI for all Layouts and Routes for our app.
 mod views;
 
 /// The Route enum is used to define the structure of internal routes in our app. All route enums need to derive
