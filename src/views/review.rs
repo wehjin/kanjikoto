@@ -59,9 +59,9 @@ pub fn Review() -> Element {
             table { class: "table",
                 thead {
                     tr {
+                        th { "Lesson" }
                         th { "Kanji" }
                         th { "Hint" }
-                        th { "Lesson" }
                     }
                 }
                 tbody {
@@ -79,14 +79,14 @@ fn LessonRow(state: Lesson, lessons: WriteSignal<Vec<Lesson>>) -> Element {
     let number = state.index + 1;
     rsx! {
         tr {
+            td { class: "is-narrow",
+                label { class: "label is-large has-text-centered", "{number}" }
+            }
             td {
                 label { class: "label is-large", "{state.prompt}" }
             }
             td { class: "is-narrow",
                 HintCell {state: state.hint.clone(), lessons: lessons.clone()}
-            }
-            td { class: "is-narrow",
-                label { class: "label is-large has-text-centered", "{number}" }
             }
         }
     }
