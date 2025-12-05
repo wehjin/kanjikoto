@@ -14,7 +14,7 @@ pub fn Navbar() -> Element {
             div { class: "navbar-menu is-active",
                 div { class: "navbar-start",
                     Link{ class: "navbar-item", to: Route::Home{}, "Home"}
-                    Link{ class: "navbar-item", to: Route::Blog { id: 1 }, "Blog"}
+                    Link{ class: "navbar-item", to: Route::Review{}, "Review"}
                 }
                 div { class: "navbar-end",
                     Link{ class: "navbar-item", to: Route::Start {}, "Settings"}

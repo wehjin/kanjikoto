@@ -4,11 +4,11 @@
 mod home;
 pub use home::Home;
 
-mod blog;
-pub use blog::Blog;
-
 mod navbar;
 pub use navbar::Navbar;
 
 mod start;
 pub use start::Start;
+
+mod review;
+pub use review::Review;

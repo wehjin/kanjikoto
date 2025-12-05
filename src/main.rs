@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use views::{Blog, Home, Navbar, Start};
+use views::{Home, Navbar, Review, Start};
 
 mod components;
 mod core;
@@ -11,10 +11,10 @@ enum Route {
     #[layout(Navbar)]
         #[route("/")]
         Home {},
-        #[route("/blog/:id")]
-        Blog { id: i32 },
         #[route("/start")]
         Start {},
+        #[route("/review")]
+        Review {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
