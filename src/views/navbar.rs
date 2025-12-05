@@ -9,12 +9,12 @@ pub fn Navbar() -> Element {
     rsx! {
         nav { class: "navbar", role: "navigation", aria_label: "main navigation",
             div { class: "navbar-brand",
-                Link{ class: "navbar-item", to: Route::Home{}, img { src: LOGO_IMG, }}
+                Link{ class: "navbar-item", to: Route::Review{}, img { src: LOGO_IMG, }}
             }
             div { class: "navbar-menu is-active",
                 div { class: "navbar-start",
-                    Link{ class: "navbar-item", to: Route::Home{}, "Home"}
                     Link{ class: "navbar-item", to: Route::Review{}, "Review"}
+                    Link{ class: "navbar-item", to: Route::Answers{}, "Answers"}
                 }
                 div { class: "navbar-end",
                     Link{ class: "navbar-item", to: Route::Start {}, "Settings"}

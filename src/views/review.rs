@@ -1,3 +1,4 @@
+use crate::components::tags::{Tags, TagsCell};
 use crate::core::api;
 use crate::core::drill_point::DrillPoint;
 use dioxus::prelude::*;
@@ -13,8 +14,8 @@ impl Lesson {
     pub fn new(index: usize, drill: DrillPoint) -> Self {
         Self {
             index,
-            prompt: drill.kanji,
-            hint: Hint::new(drill.meaning, index),
+            prompt: drill.kanji.clone(),
+            hint: Hint::new(drill.to_meanings(), index),
         }
     }
 }
@@ -26,12 +27,7 @@ pub struct Hint {
 }
 
 impl Hint {
-    pub fn new(text: String, index: usize) -> Self {
-        let tags = text
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>();
+    pub fn new(tags: Vec<String>, index: usize) -> Self {
         Self {
             index,
             tags,
@@ -45,14 +41,14 @@ pub fn Review() -> Element {
     let mut lessons = use_signal(|| Vec::<Lesson>::new());
     let drills = use_resource(|| async move { api::get_drills().await });
     use_effect(move || {
-        let drill_lessons = drills
+        let lessons_vec = drills
             .cloned()
             .unwrap_or_default()
             .into_iter()
             .enumerate()
             .map(|(index, point)| Lesson::new(index, point))
             .collect::<Vec<_>>();
-        lessons.set(drill_lessons);
+        lessons.set(lessons_vec);
     });
     rsx! {
         div { class: "container",
@@ -100,11 +96,7 @@ fn LessonRow(state: Lesson, lessons: WriteSignal<Vec<Lesson>>) -> Element {
 fn HintCell(state: Hint, lessons: WriteSignal<Vec<Lesson>>) -> Element {
     rsx! {
         if state.visible {
-            div { class: "tags",
-                for tag in state.tags.iter() {
-                    span { class: "tag is-info is-light", "{tag}" }
-                }
-            }
+            TagsCell { tags: Tags::new(state.tags.clone()) }
         } else {
             button { class: "button is-link is-light is-small",
                 onclick: move |_| lessons.write().get_mut(state.index).unwrap().hint.visible = true,

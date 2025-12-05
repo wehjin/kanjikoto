@@ -41,4 +41,12 @@ impl DrillPoint {
             yomi: yomi_segments.join(""),
         }
     }
+
+    pub fn to_meanings(&self) -> Vec<String> {
+        self.meaning
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+    }
 }
