@@ -1,40 +1,9 @@
-use crate::components::tags::{Tags, TagsCell};
 use crate::core::api;
-use crate::core::drill_point::DrillPoint;
+use crate::views::review::lesson::{Hint, HintStyle};
 use dioxus::prelude::*;
+use lesson::{Answer, Lesson};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Lesson {
-    pub index: usize,
-    pub prompt: String,
-    pub hint: Hint,
-}
-
-impl Lesson {
-    pub fn new(index: usize, drill: DrillPoint) -> Self {
-        Self {
-            index,
-            prompt: drill.kanji.clone(),
-            hint: Hint::new(drill.to_meanings(), index),
-        }
-    }
-}
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Hint {
-    pub index: usize,
-    pub tags: Vec<String>,
-    pub visible: bool,
-}
-
-impl Hint {
-    pub fn new(tags: Vec<String>, index: usize) -> Self {
-        Self {
-            index,
-            tags,
-            visible: false,
-        }
-    }
-}
+mod lesson;
 
 #[component]
 pub fn Review() -> Element {
@@ -61,7 +30,7 @@ pub fn Review() -> Element {
                     tr {
                         th { "Lesson" }
                         th { "Kanji" }
-                        th { "Hint" }
+                        th { "Answer" }
                     }
                 }
                 tbody {
@@ -82,25 +51,39 @@ fn LessonRow(state: Lesson, lessons: WriteSignal<Vec<Lesson>>) -> Element {
             td { class: "is-narrow",
                 label { class: "label is-large has-text-centered", "{number}" }
             }
-            td {
+            td { class: "is-narrow",
                 label { class: "label is-large", "{state.prompt}" }
             }
-            td { class: "is-narrow",
-                HintCell {state: state.hint.clone(), lessons: lessons.clone()}
-            }
+            td { AnswerCell {answer: state.answer.clone(), lessons: lessons.clone()} }
         }
     }
 }
 
 #[component]
-fn HintCell(state: Hint, lessons: WriteSignal<Vec<Lesson>>) -> Element {
+fn AnswerCell(answer: Answer, lessons: WriteSignal<Vec<Lesson>>) -> Element {
     rsx! {
-        if state.visible {
-            TagsCell { tags: Tags::new(state.tags.clone()) }
+        if answer.visible {
+            div { class: "tags",
+                for hint in answer.hints.iter() {
+                    HintSpan {hint: hint.clone()}
+                }
+            }
         } else {
-            button { class: "button is-link is-light is-small",
-                onclick: move |_| lessons.write().get_mut(state.index).unwrap().hint.visible = true,
+            button { class: "button is-info is-light is-small",
+                onclick: move |_| lessons.write().get_mut(answer.lesson_index).unwrap().answer.visible = true,
                 "Show"}
         }
+    }
+}
+
+#[component]
+fn HintSpan(hint: Hint) -> Element {
+    let style = match hint.style {
+        HintStyle::Definition => " is-info",
+        HintStyle::Reading => "is-primary",
+    };
+    let text = hint.text;
+    rsx! {
+        span { class: "tag {style}", "{text}" }
     }
 }
