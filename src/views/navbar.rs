@@ -22,5 +22,6 @@ pub fn Navbar() -> Element {
             }
         }
         Outlet::<Route> {}
+        footer { class: "footer"}
     }
 }
