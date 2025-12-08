@@ -1,5 +1,5 @@
+use crate::components::hint::HintsCell;
 use crate::core::api;
-use crate::views::review::lesson::{Hint, HintStyle};
 use dioxus::prelude::*;
 use lesson::{Answer, Lesson};
 
@@ -63,27 +63,11 @@ fn LessonRow(state: Lesson, lessons: WriteSignal<Vec<Lesson>>) -> Element {
 fn AnswerCell(answer: Answer, lessons: WriteSignal<Vec<Lesson>>) -> Element {
     rsx! {
         if answer.visible {
-            div { class: "tags",
-                for hint in answer.hints.iter() {
-                    HintSpan {hint: hint.clone()}
-                }
-            }
+            HintsCell { hints: answer.hints.clone() }
         } else {
             button { class: "button is-info is-light is-small",
                 onclick: move |_| lessons.write().get_mut(answer.lesson_index).unwrap().answer.visible = true,
                 "Show"}
         }
-    }
-}
-
-#[component]
-fn HintSpan(hint: Hint) -> Element {
-    let style = match hint.style {
-        HintStyle::Definition => " is-info",
-        HintStyle::Reading => "is-primary",
-    };
-    let text = hint.text;
-    rsx! {
-        span { class: "tag {style}", "{text}" }
     }
 }

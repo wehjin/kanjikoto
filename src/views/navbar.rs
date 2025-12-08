@@ -6,6 +6,7 @@ const LOGO_IMG: Asset = asset!("/assets/PlaygroundImage4.jpg");
 /// The Navbar component that will be rendered on all pages of our app since every page is under the layout.
 #[component]
 pub fn Navbar() -> Element {
+    let seed = 1;
     rsx! {
         nav { class: "navbar", role: "navigation", aria_label: "main navigation",
             div { class: "navbar-brand",
@@ -14,7 +15,7 @@ pub fn Navbar() -> Element {
             div { class: "navbar-menu is-active",
                 div { class: "navbar-start",
                     Link{ class: "navbar-item", to: Route::Review{}, "Review"}
-                    Link{ class: "navbar-item", to: Route::Answers{}, "Answers"}
+                    Link{ class: "navbar-item", to: Route::Answers{ seed }, "Worksheet"}
                 }
                 div { class: "navbar-end",
                     Link{ class: "navbar-item", to: Route::Start {}, "Settings"}

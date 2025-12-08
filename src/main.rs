@@ -11,8 +11,8 @@ enum Route {
     #[layout(Navbar)]
         #[route("/")]
         Review {},
-        #[route("/answers")]
-        Answers {},
+        #[route("/answers/:seed")]
+        Answers { seed: usize },
         #[route("/start")]
         Start {},
 }

@@ -1,3 +1,5 @@
+use crate::components::hint;
+use crate::components::hint::Hint;
 use crate::core::drill_point::DrillPoint;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -12,7 +14,7 @@ impl Lesson {
         Self {
             index,
             prompt: drill.kanji.clone(),
-            answer: Answer::new(index, get_hints(&drill)),
+            answer: Answer::new(index, hint::get_hints(&drill)),
         }
     }
 }
@@ -32,43 +34,4 @@ impl Answer {
             visible: false,
         }
     }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Hint {
-    pub style: HintStyle,
-    pub text: String,
-}
-impl Hint {
-    pub fn definition(text: String) -> Self {
-        Self {
-            style: HintStyle::Definition,
-            text,
-        }
-    }
-    pub fn reading(text: String) -> Self {
-        Self {
-            style: HintStyle::Reading,
-            text,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum HintStyle {
-    Definition,
-    Reading,
-}
-
-fn get_hints(drill: &DrillPoint) -> Vec<Hint> {
-    let definitions = drill
-        .to_meanings()
-        .into_iter()
-        .map(Hint::definition)
-        .collect::<Vec<_>>();
-    let yomi = Hint::reading(drill.yomi.clone());
-    vec![yomi]
-        .into_iter()
-        .chain(definitions)
-        .collect::<Vec<_>>()
 }
