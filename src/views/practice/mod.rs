@@ -193,12 +193,14 @@ fn BackContent(card: Card) -> Element {
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>();
     rsx! {
-        span { class: "tag is-info", "{tag}"}
-            section { class: "section  has-text-centered",
+        span { class: "tag is-info is-large", "{tag}"}
+        div { class: "container",
+            section { class: "section",
                 h1 { class: "title", {title} }
-            p {
-                for subtitle in subtitles {
-                span { class: "tag is-light", "{subtitle}"}
+                div { class: "tags are-medium",
+                    for subtitle in subtitles {
+                        span { class: "tag is-warning is-light", "{subtitle}"}
+                    }
                 }
             }
         }
