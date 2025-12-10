@@ -1,17 +1,10 @@
 use crate::core::drill_point::DrillPoint;
 use crate::views::practice::card::Card;
-use rand::prelude::StdRng;
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum DeckStatus {
-    Prompt,
-    Learn,
-    Check,
-}
+use rand::prelude::{SliceRandom, StdRng};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Deck {
-    pub status: DeckStatus,
+    pub rng: StdRng,
     pub top: Card,
     pub learn: Vec<Card>,
     pub review: Vec<Card>,
@@ -19,15 +12,26 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn new(drills: Vec<DrillPoint>, rng: &mut StdRng) -> Self {
+    pub fn new(drills: Vec<DrillPoint>, mut rng: StdRng) -> Self {
         let mut cards = drills.into_iter().map(Card::new).collect::<Vec<_>>();
+        cards.shuffle(&mut rng);
         let top = cards.pop().unwrap();
-        Self {
-            status: DeckStatus::Prompt,
+        let deck = Self {
+            rng,
             top,
             learn: cards,
             review: vec![],
             celebrate: vec![],
-        }
+        };
+        deck
+    }
+    pub fn next(self) -> Self {
+        self
+    }
+    pub fn fail(self) -> Self {
+        self
+    }
+    pub fn pass(self) -> Self {
+        self
     }
 }
