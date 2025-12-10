@@ -80,7 +80,8 @@ fn StartSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
         button {
             class: "button is-primary",
             onclick: move |_| {
-                *session.write() = SessionState::Prompt { deck: deck.clone() }
+                let deck = deck.clone().start();
+                *session.write() = SessionState::Prompt { deck }
             },
             "Start"
         }
@@ -166,7 +167,11 @@ fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                         let deck = deck.clone();
                         move |_| {
                             let deck = deck.clone().pass();
-                            *session.write() = SessionState::Prompt {  deck };
+                            *session.write() = if deck.mastered {
+                                SessionState::Start { deck }
+                            } else {
+                                SessionState::Prompt { deck}
+                            };
                         }
                     },
                     "Pass"

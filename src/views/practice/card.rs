@@ -1,7 +1,15 @@
 use crate::core::drill_point::DrillPoint;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Goal {
+    Learn,
+    Review,
+    Celebrate,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Card {
+    pub goal: Goal,
     pub front: CardFront,
     pub back: CardBack,
 }
@@ -15,7 +23,11 @@ impl Card {
             yomi: drill.yomi.to_string(),
             meaning: drill.meaning.to_string(),
         };
-        Card { front, back }
+        Card {
+            goal: Goal::Learn,
+            front,
+            back,
+        }
     }
 }
 
