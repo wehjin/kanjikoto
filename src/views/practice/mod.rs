@@ -19,6 +19,7 @@ pub fn Practice() -> Element {
                 SessionSection {}
             }
         }
+        footer { class: "footer" }
     }
 }
 
