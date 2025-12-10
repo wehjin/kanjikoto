@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use views::{Answers, Navbar, Review, Start};
+use views::{Answers, Navbar, Practice, Review, Start};
 
 mod components;
 mod core;
@@ -13,6 +13,8 @@ enum Route {
         Review {},
         #[route("/answers/:seed")]
         Answers { seed: usize },
+        #[route("/practice")]
+        Practice {},
         #[route("/start")]
         Start {},
 }

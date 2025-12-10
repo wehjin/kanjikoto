@@ -63,7 +63,7 @@ fn LessonRow(state: Lesson, lessons: WriteSignal<Vec<Lesson>>) -> Element {
 fn AnswerCell(answer: Answer, lessons: WriteSignal<Vec<Lesson>>) -> Element {
     rsx! {
         if answer.visible {
-            HintsCell { hints: answer.hints.clone() }
+            HintsCell { hints: answer.hints.clone(), light: false }
         } else {
             button { class: "button is-info is-light is-small",
                 onclick: move |_| lessons.write().get_mut(answer.lesson_index).unwrap().answer.visible = true,

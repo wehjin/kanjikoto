@@ -79,19 +79,19 @@ fn AnswerRow(state: Answer) -> Element {
     rsx! {
         tr {
             td { class: "is-narrow",
-                label { class: "label is-large has-text-centered", "{number}" }
+                label { class: "label has-text-centered", "{number}" }
             }
             td { class: "is-narrow",
-                 label { class: "label is-large", "{state.kanji}" }
+                 label { class: "label", "{state.kanji}" }
             }
             td {
-                input { class: "input is-large", type: "text", readonly: true }
+                input { class: "input", type: "text", readonly: true }
             }
             td { class: "is-narrow",
-                span { class: "is-size-1", "|" }
+                span { class: "is-size-4", "|" }
             }
             td { class: "is-narrow",
-                HintsCell { hints: state.hints.clone() }
+                HintsCell { hints: state.hints.clone(), light: true }
             }
         }
     }

@@ -42,24 +42,25 @@ pub fn get_hints(drill: &DrillPoint) -> Vec<Hint> {
 }
 
 #[component]
-pub fn HintSpan(hint: Hint) -> Element {
+pub fn HintSpan(hint: Hint, light: bool) -> Element {
     let style = match hint.style {
-        HintStyle::Definition => " is-info",
+        HintStyle::Definition => "is-info",
         HintStyle::Reading => "is-primary",
     };
+    let light = if light { "is-light" } else { "" };
     let text = hint.text;
     rsx! {
-        span { class: "tag {style}", "{text}" }
+        span { class: "tag {style} {light}", "{text}" }
     }
 }
 
 #[component]
-pub fn HintsCell(hints: Vec<Hint>) -> Element {
+pub fn HintsCell(hints: Vec<Hint>, light: bool) -> Element {
     rsx! {
         div {
             class: "tags",
             for hint in hints.iter() {
-                HintSpan {hint: hint.clone()}
+                HintSpan {hint: hint.clone(), light}
             }
         }
     }
