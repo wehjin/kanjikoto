@@ -11,7 +11,15 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn new(drills: Vec<DrillPoint>, mut rng: StdRng) -> Self {
+    pub fn turns_remaining(&self) -> usize {
+        let card_turns = self
+            .cards
+            .iter()
+            .fold(0, |acc, card| acc + card.turns_remaining());
+        self.top.turns_remaining() + card_turns
+    }
+
+    pub fn new(drills: Vec<DrillPoint>, rng: StdRng) -> Self {
         let mut cards = drills.into_iter().map(Card::new).collect::<Vec<_>>();
         let top = cards.pop().unwrap();
         let deck = Self {
@@ -56,8 +64,8 @@ impl Deck {
             Goal::Review => Goal::Celebrate,
             Goal::Celebrate => Goal::Celebrate,
         };
-        let turns_remaining = turns_remaining(&self.cards);
-        if turns_remaining == 0 && self.top.goal == Goal::Celebrate {
+        let turns_remaining = self.turns_remaining();
+        if turns_remaining == 0 {
             self.mastered = true;
             self
         } else {
@@ -87,14 +95,6 @@ impl Deck {
             },
         }
     }
-}
-
-fn turns_remaining(cards: &Vec<Card>) -> usize {
-    cards.iter().fold(0, |acc, card| match card.goal {
-        Goal::Learn => acc + 2,
-        Goal::Review => acc + 1,
-        Goal::Celebrate => acc,
-    })
 }
 
 fn find_top(cards: Vec<Card>) -> (Vec<Card>, Option<Card>) {

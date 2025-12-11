@@ -92,10 +92,22 @@ fn StartSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
 #[component]
 fn PromptSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
     let title = deck.top.front.kanji.clone();
+    let turns = deck.turns_remaining();
     rsx! {
         div { class: "card",
             div { class: "card-content",
-                p { class: "subtitle is-6 has-text-grey-light", "Read and translate"}
+                nav { class: "level",
+                    div { class: "level-left",
+                        div { class: "level-item",
+                            span { class: "subtitle is-6 has-text-grey-light", "Read and translate"}
+                        }
+                    }
+                    div { class: "level-right",
+                        div { class: "level-item",
+                            span { class: "tag is-light", "{turns}"}
+                        }
+                    }
+                }
                 section { class: "section  has-text-centered",
                     h1 { class: "title", {title} }
                 }
@@ -128,9 +140,10 @@ fn PromptSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
 #[component]
 fn LearnSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
     let card = deck.top.clone();
+    let turns = deck.turns_remaining();
     rsx! {
         div { class: "card",
-            div { class: "card-content", BackContent{ card } }
+            div { class: "card-content", BackContent{ card, turns } }
             footer { class: "card-footer",
                 a { class: "card-footer-item",
                     href: "#",
@@ -147,9 +160,10 @@ fn LearnSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
 #[component]
 fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
     let card = deck.top.clone();
+    let turns = deck.turns_remaining();
     rsx! {
         div { class: "card",
-            div { class: "card-content", BackContent{ card } }
+            div { class: "card-content", BackContent{ card, turns } }
             footer { class: "card-footer",
                 a { class: "card-footer-item",
                     href: "#",
@@ -183,7 +197,7 @@ fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
 }
 
 #[component]
-fn BackContent(card: Card) -> Element {
+fn BackContent(card: Card, turns: usize) -> Element {
     let tag = card.front.kanji.clone();
     let title = card.back.yomi.clone();
     let subtitles = card
@@ -194,7 +208,13 @@ fn BackContent(card: Card) -> Element {
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>();
     rsx! {
-        span { class: "tag is-info is-large", "{tag}"}
+        nav { class: "level",
+            div { class: "level-left",
+                div { class: "level-item",
+                    span { class: "tag is-info is-large", "{tag}"}
+                }
+            }
+        }
         div { class: "container",
             section { class: "section",
                 h1 { class: "title", {title} }
