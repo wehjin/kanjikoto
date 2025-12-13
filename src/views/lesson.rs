@@ -44,9 +44,7 @@ fn Phrases(phrases: Vec<PhraseView>, importing: WriteSignal<bool>) -> Element {
                 }
                 div { class: "block",
                     button { class: "button",
-                        onclick:  move |_| {
-                            *importing.write() = true;
-                        },
+                        onclick:  move |_| *importing.write() = true,
                         "Import CSV"
                     }
                 }
@@ -57,10 +55,11 @@ fn Phrases(phrases: Vec<PhraseView>, importing: WriteSignal<bool>) -> Element {
 
 #[component]
 fn ImportDialog(importing: WriteSignal<bool>) -> Element {
+    const CSV_URL: &str = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQjXD1Z1nrpTS60VhvlyI3Gha7bS-XP1r_nv3ITYbw4JBL-FA8SB6irRsVHhlEje5ZZT_H8uwFuRGgw/pub?gid=0&single=true&output=csv";
     rsx! {
         div { id: "import-dialog", class: "modal is-active",
             div { class: "modal-background" }
-            div { class: "modal-card",
+            form { class: "modal-card",
                 header { class: "modal-card-head",
                     p { class: "modal-card-title", "Import CSV" }
                     button { class: "delete", aria_label: "close", onclick: move |_| *importing.write() = false }
@@ -68,14 +67,19 @@ fn ImportDialog(importing: WriteSignal<bool>) -> Element {
                 section { class: "modal-card-body",
                     div { class: "field",
                         label { class: "label", "URL" }
-                        div { class: "control",
-                            input { type: "", accept: "text/csv" }
+                        div { class: "control is-expanded",
+                            input { class: "input", type: "url", value: CSV_URL }
                         }
                     }
                 }
                 footer { class: "modal-card-foot",
                     div { class: "buttons",
-                        button { class: "button is-success", "Import" }
+                        button { class: "button is-success",
+                            onclick: move |_| {
+                                *importing.write() = false;
+                            },
+                            "Import"
+                        }
                         button { class: "button", onclick: move |_| *importing.write() = false,
                             "Cancel"
                         }
