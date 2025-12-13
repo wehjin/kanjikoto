@@ -15,10 +15,14 @@ rand_chacha = "0.9.0"
 reqwest = "0.12.24"
 rusqlite = { version = "0.37.0", optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
+thiserror = { version = "2.0.17", optional = true }
 
 [features]
 default = []
 web = ["dioxus/web", "dep:getrandom"]
 desktop = ["dioxus/desktop", "dep:getrandom"]
 mobile = ["dioxus/mobile", "dep:getrandom"]
-server = ["dioxus/server", "dep:rusqlite"]
+server = ["dioxus/server", "dep:rusqlite", "dep:thiserror"]
+
+[dev-dependencies]
+anyhow = "1.0.100"

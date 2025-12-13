@@ -17,6 +17,7 @@ pub fn Navbar() -> Element {
                     Link{ class: "navbar-item", to: Route::Review{}, "Review"}
                     Link{ class: "navbar-item", to: Route::Answers{ seed }, "Worksheet"}
                     Link{ class: "navbar-item", to: Route::Practice{}, "Practice"}
+                    Link{ class: "navbar-item", to: Route::Lesson{}, "Lesson"}
                 }
                 div { class: "navbar-end",
                     Link{ class: "navbar-item", to: Route::Start {}, "Settings"}

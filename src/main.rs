@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use views::{Answers, Navbar, Practice, Review, Start};
+use views::{Answers, Lesson, Navbar, Practice, Review, Start};
 
 mod components;
 mod core;
@@ -9,14 +9,16 @@ mod views;
 #[rustfmt::skip]
 enum Route {
     #[layout(Navbar)]
-        #[route("/")]
-        Review {},
-        #[route("/answers/:seed")]
-        Answers { seed: usize },
-        #[route("/practice")]
-        Practice {},
-        #[route("/start")]
-        Start {},
+    #[route("/")]
+    Review {},
+    #[route("/answers/:seed")]
+    Answers { seed: usize },
+    #[route("/practice")]
+    Practice {},
+    #[route("/start")]
+    Start {},
+    #[route("/lesson")]
+    Lesson {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.

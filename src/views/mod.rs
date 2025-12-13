@@ -15,3 +15,6 @@ pub use answers::Answers;
 
 mod practice;
 pub use practice::Practice;
+
+mod lesson;
+pub use lesson::Lesson;

@@ -2847,6 +2847,7 @@ dependencies = [
 name = "kanjikoto"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "csv",
  "dioxus",
  "getrandom 0.3.4",
@@ -2855,6 +2856,7 @@ dependencies = [
  "reqwest",
  "rusqlite",
  "serde",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
