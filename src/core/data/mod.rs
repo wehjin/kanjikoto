@@ -1,17 +1,12 @@
+use crate::core::api::get_drills_url;
+use dioxus::fullstack::Form;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 pub mod backend;
-
 #[cfg(feature = "server")]
-thread_local! {
-    pub static DB: rusqlite::Connection = {
-        let conn = backend::connect(Some("kanjikoto.db"));
-        info!("Database path: {}", conn.path().unwrap());
-        conn
-    };
-}
+pub mod db;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -26,10 +21,28 @@ pub struct Lesson {
     pub creator_id: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NewPhrase {
+    pub lesson_id: i64,
+    pub prompt: String,
+    pub reading: String,
+    pub translation: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Phrase {
+    pub phrase_id: i64,
+    pub lesson_id: i64,
+    pub prompt: String,
+    pub reading: String,
+    pub translation: String,
+}
+
 #[get("/api/users")]
 pub async fn users() -> Result<Vec<User>> {
-    use crate::core::data::backend::get_users;
-    let users = DB.with(|db| get_users(db));
+    use db::prelude::*;
+    let db = DB.lock().unwrap();
+    let users = get_users(&db);
     Ok(users)
 }
 
@@ -50,14 +63,49 @@ pub struct LessonView {
 
 #[get("/api/lesson_view")]
 pub async fn lesson_view() -> Result<LessonView> {
-    use crate::core::data::backend::*;
-    let lesson = DB
-        .with(|db| read_user_lesson("admin", db))?
-        .expect("Failed to fetch lesson");
+    use db::prelude::*;
+    let db = DB.lock().unwrap();
+    let lesson = read_user_lesson("admin", &db)?.expect("Should have hard-coded lesson");
+    let phrases = read_phrases(lesson.lesson_id, &db)?
+        .into_iter()
+        .map(|p| PhraseView {
+            phrase_id: p.phrase_id,
+            prompt: p.prompt,
+            reading: p.reading,
+            meaning: p.translation,
+        })
+        .collect::<Vec<_>>();
     let lesson_view = LessonView {
         lesson_id: lesson.lesson_id,
         title: lesson.title,
-        phrases: vec![],
+        phrases,
     };
     Ok(lesson_view)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImportCsvForm {
+    pub lesson_id: i64,
+    pub csv_url: String,
+}
+
+#[post("/api/import_csv")]
+pub async fn import_csv(form: Form<ImportCsvForm>) -> Result<()> {
+    use db::prelude::*;
+    let lesson_id = form.0.lesson_id;
+    let csv_url = form.0.csv_url.trim();
+    let new_phrases = get_drills_url(csv_url)
+        .await
+        .into_iter()
+        .map(|d| NewPhrase {
+            lesson_id,
+            prompt: d.kanji,
+            reading: d.yomi,
+            translation: d.meaning,
+        })
+        .collect::<Vec<_>>();
+
+    let mut db = DB.lock().expect("Failed to lock database");
+    insert_phrases(new_phrases, &mut db)?;
+    Ok(())
 }
