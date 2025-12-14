@@ -4,8 +4,6 @@ use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
-pub mod backend;
-#[cfg(feature = "server")]
 pub mod db;
 
 #[derive(Debug, Serialize, Deserialize)]
