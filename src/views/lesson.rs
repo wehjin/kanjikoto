@@ -27,25 +27,26 @@ pub fn Lesson() -> Element {
         Ok(()) as Result<()>
     });
     rsx! {
-        if lesson.lesson_id() == i64::MAX {
-            section { class: "section",
-                h1{ class: "title", "Lesson" }
-                div { class: "skeleton-block"}
-            }
-        } else {
-            section { class: "section",
-                h1{ class: "title", "Lesson" }
-                h2{ class: "subtitle", {lesson.title()} }
-            }
-            Phrases{ phrases: lesson.phrases(), importing: importing.clone() }
-            footer { class: "footer" }
-            if importing.read().clone() {
-                ImportDialog{
-                    lesson_id: lesson.lesson_id().read().clone(),
-                    importing: importing.clone(),
-                    onimport: move |details| async move {
-                        import_csv.call(details);
-                    },
+        section { class: "section",
+            if lesson.lesson_id() == i64::MAX {
+                div { class: "block",
+                    h1{ class: "title", "Lesson" }
+                    div { class: "skeleton-block"}
+                }
+            } else {
+                div { class: "block",
+                    h1{ class: "title", "Lesson" }
+                    h2{ class: "subtitle", {lesson.title()} }
+                }
+                Phrases{ phrases: lesson.phrases(), importing: importing.clone() }
+                if importing.read().clone() {
+                    ImportDialog{
+                        lesson_id: lesson.lesson_id().read().clone(),
+                        importing: importing.clone(),
+                        onimport: move |details| async move {
+                            import_csv.call(details);
+                        },
+                    }
                 }
             }
         }
@@ -55,7 +56,7 @@ pub fn Lesson() -> Element {
 #[component]
 fn Phrases(phrases: ReadSignal<Vec<PhraseView>>, importing: WriteSignal<bool>) -> Element {
     rsx! {
-        section { class: "section",
+        div { class: "block",
             h5 { class: "title is-5", "Phrases" }
             div { class: "container",
                 if phrases.is_empty() {
