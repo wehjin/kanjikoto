@@ -46,7 +46,8 @@ pub enum StorageError {
 pub fn insert_phrases(
     phrases: Vec<NewPhrase>,
     conn: &mut rusqlite::Connection,
-) -> Result<(), StorageError> {
+) -> Result<usize, StorageError> {
+    let count = phrases.len();
     const SQL: &str =
         "INSERT INTO phrases (lesson_id, prompt, reading, translation) VALUES (?1, ?2, ?3, ?4)";
     let tx = conn.transaction()?;
@@ -63,7 +64,7 @@ pub fn insert_phrases(
         stmt.finalize()?;
     }
     tx.commit()?;
-    Ok(())
+    Ok(count)
 }
 pub fn read_phrases(
     lesson_id: i64,

@@ -44,7 +44,7 @@ pub async fn users() -> Result<Vec<User>> {
     Ok(users)
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Store)]
 pub struct PhraseView {
     pub phrase_id: i64,
     pub prompt: String,
@@ -52,7 +52,7 @@ pub struct PhraseView {
     pub meaning: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Store)]
 pub struct LessonView {
     pub lesson_id: i64,
     pub title: String,
@@ -82,13 +82,13 @@ pub async fn lesson_view() -> Result<LessonView> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ImportCsvForm {
+pub struct ImportDetails {
     pub lesson_id: i64,
     pub csv_url: String,
 }
 
 #[post("/api/import_csv")]
-pub async fn import_csv(form: Form<ImportCsvForm>) -> Result<()> {
+pub async fn import_csv(form: Form<ImportDetails>) -> Result<usize> {
     use db::prelude::*;
     let lesson_id = form.0.lesson_id;
     let csv_url = form.0.csv_url.trim();
@@ -104,6 +104,6 @@ pub async fn import_csv(form: Form<ImportCsvForm>) -> Result<()> {
         .collect::<Vec<_>>();
 
     let mut db = DB.lock().expect("Failed to lock database");
-    insert_phrases(new_phrases, &mut db)?;
-    Ok(())
+    let count = insert_phrases(new_phrases, &mut db)?;
+    Ok(count)
 }
