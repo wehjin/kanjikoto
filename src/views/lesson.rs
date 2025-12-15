@@ -64,7 +64,7 @@ pub fn Lesson() -> Element {
                         div { class: "container",
                             div { class: "columns",
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header",
+                                    div { class: "box-header has-text-centered",
                                         h6 { class: "title is-6", "Ready"}
                                     }
                                     div { class: "box mt-3 is-flex-grow-1",
@@ -76,13 +76,13 @@ pub fn Lesson() -> Element {
                                     }
                                 }
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header",
+                                    div { class: "box-header has-text-centered",
                                         h6 { class: "title is-6", "Learned"}
                                     }
                                     div { class: "box mt-3 is-flex-grow-1",
                                         p { class: "buttons",
                                             for _ in 0..5 {
-                                                LearnedButton{}
+                                                LearnedIcon{}
                                             }
                                         }
                                     }
@@ -118,12 +118,10 @@ fn ReadyButton() -> Element {
 }
 
 #[component]
-fn LearnedButton() -> Element {
+fn LearnedIcon() -> Element {
     rsx! {
-        button { class: "button is-large is-ghost has-text-warning",
-            span { class: "icon is-large",
-                i { class: "fas fa-star fa-xl" }
-            }
+        span { class: "icon is-large has-text-warning",
+            i { class: "fas fa-star fa-2xl" }
         }
     }
 }
