@@ -1,6 +1,6 @@
 use crate::components::hint::{get_hints, Hint, HintsCell};
 use crate::core::api;
-use crate::core::drill_point::DrillPoint;
+use crate::core::api::DrillPoint;
 use dioxus::prelude::*;
 use rand::prelude::SliceRandom;
 use rand::SeedableRng;

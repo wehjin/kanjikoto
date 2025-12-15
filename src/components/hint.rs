@@ -1,4 +1,4 @@
-use crate::core::drill_point::DrillPoint;
+use crate::core::api::DrillPoint;
 use dioxus::prelude::*;
 
 #[derive(Debug, Clone, Eq, PartialEq)]

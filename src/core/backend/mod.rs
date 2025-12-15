@@ -1,7 +1,15 @@
-use crate::core::data::{Lesson, NewPhrase, Phrase, User};
+use crate::core::data::{Lesson, Phrase, User};
 use rusqlite::params;
 use std::path::Path;
 use thiserror::Error;
+mod insert_lesson;
+pub use insert_lesson::InsertLesson;
+
+#[derive(Error, Debug)]
+pub enum StorageError {
+    #[error("Database error: {0}")]
+    Sqlite(#[from] rusqlite::Error),
+}
 
 pub fn connect(filename: Option<&'static str>) -> rusqlite::Connection {
     let (conn, existed) = if let Some(filename) = filename {
@@ -30,42 +38,9 @@ pub fn connect(filename: Option<&'static str>) -> rusqlite::Connection {
         )
         .expect("Failed to create admin user");
     }
-    let lessons = read_user_lesson(&admin.id, &conn).expect("Failed to fetch lessons");
-    if lessons.is_none() {
-        insert_user_lesson(&admin.id, "Aggrieved Ch1", &conn).expect("Failed to create lesson");
-    }
     conn
 }
 
-#[derive(Error, Debug)]
-pub enum StorageError {
-    #[error("Database error: {0}")]
-    Sqlite(#[from] rusqlite::Error),
-}
-
-pub fn insert_phrases(
-    phrases: Vec<NewPhrase>,
-    conn: &mut rusqlite::Connection,
-) -> Result<usize, StorageError> {
-    let count = phrases.len();
-    const SQL: &str =
-        "INSERT INTO phrases (lesson_id, prompt, reading, translation) VALUES (?1, ?2, ?3, ?4)";
-    let tx = conn.transaction()?;
-    {
-        let mut stmt = tx.prepare(SQL)?;
-        for phrase in phrases {
-            stmt.execute(params![
-                phrase.lesson_id,
-                phrase.prompt,
-                phrase.reading,
-                phrase.translation
-            ])?;
-        }
-        stmt.finalize()?;
-    }
-    tx.commit()?;
-    Ok(count)
-}
 pub fn read_phrases(
     lesson_id: i64,
     conn: &rusqlite::Connection,
@@ -84,17 +59,6 @@ pub fn read_phrases(
         })?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(phrases)
-}
-
-fn insert_user_lesson(
-    creator: &str,
-    title: &str,
-    conn: &rusqlite::Connection,
-) -> Result<i64, StorageError> {
-    const SQL: &str = "INSERT INTO lessons (title, creator_id) VALUES (?1, ?2) RETURNING id";
-    let mut stmt = conn.prepare(SQL)?;
-    let lesson_id: i64 = stmt.query_row(params![title, creator], |row| row.get(0))?;
-    Ok(lesson_id)
 }
 
 pub fn read_user_lesson(
@@ -134,27 +98,35 @@ pub fn get_users(conn: &rusqlite::Connection) -> Vec<User> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::backend::read_user_lesson;
+    use crate::core::backend::InsertLesson;
     use crate::core::data::NewPhrase;
 
     #[test]
     fn it_works() {
         let mut conn = super::connect(None);
-        let users = super::get_users(&conn);
-        assert_eq!(users.len(), 1);
+        let admin = {
+            let users = super::get_users(&conn);
+            assert_eq!(users.len(), 1);
+            users.into_iter().next().unwrap()
+        };
 
-        let admin = users.into_iter().next().unwrap();
-        let lesson = super::read_user_lesson(&admin.id, &conn)
+        InsertLesson {
+            title: "Aggrieved Ch1".to_string(),
+            owner: admin.id.clone(),
+            phrases: vec![NewPhrase {
+                prompt: "嫌".to_string(),
+                reading: "いや".to_string(),
+                translation: "unpleasant".to_string(),
+            }],
+        }
+        .apply(&mut conn)
+        .expect("Failed to insert lesson");
+
+        let lesson = read_user_lesson(&admin.id, &conn)
             .expect("Failed to fetch lesson")
             .unwrap();
         assert_eq!(lesson.title, "Aggrieved Ch1");
-
-        let new_phrases = vec![NewPhrase {
-            lesson_id: lesson.lesson_id,
-            prompt: "嫌".to_string(),
-            reading: "いや".to_string(),
-            translation: "unpleasant".to_string(),
-        }];
-        super::insert_phrases(new_phrases, &mut conn).expect("Failed to insert phrases");
         let phrases =
             super::read_phrases(lesson.lesson_id, &conn).expect("Failed to fetch phrases");
         assert_eq!(phrases.len(), 1);

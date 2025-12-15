@@ -1,6 +1,6 @@
 use crate::components::hint;
 use crate::components::hint::Hint;
-use crate::core::drill_point::DrillPoint;
+use crate::core::api::DrillPoint;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Lesson {
