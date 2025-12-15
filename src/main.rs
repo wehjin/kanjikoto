@@ -36,6 +36,7 @@ fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link{ rel: "stylesheet", href: "https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"}
+        document::Link{ rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"}
         Router::<Route> {}
     }
 }

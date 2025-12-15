@@ -2,6 +2,7 @@ use crate::core::data::{import_csv, lesson_view, ImportDetails, LessonView, Phra
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::Shutdown::Read;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Store)]
 enum Mode {
@@ -60,6 +61,37 @@ pub fn Lesson() -> Element {
                         h1{ class: "title", {lesson.title} }
                     }
                     div { class: "block",
+                        h5 { class: "title is-5", "Today" }
+                        div { class: "container",
+                            div { class: "columns",
+                                div { class: "column m-3 is-flex is-flex-direction-column",
+                                    div { class: "box-header",
+                                        h6 { class: "title is-6", "Ready"}
+                                    }
+                                    div { class: "box mt-3 is-flex-grow-1",
+                                        p { class: "buttons",
+                                            for _ in 0..12 {
+                                                ReadyButton{}
+                                            }
+                                        }
+                                    }
+                                }
+                                div { class: "column m-3 is-flex is-flex-direction-column",
+                                    div { class: "box-header",
+                                        h6 { class: "title is-6", "Learned"}
+                                    }
+                                    div { class: "box mt-3 is-flex-grow-1",
+                                        p { class: "buttons",
+                                            for _ in 0..5 {
+                                                LearnedButton{}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    div { class: "block",
                         h5 { class: "title is-5", "Phrases" }
                         div { class: "container",
                             if lesson.phrases.is_empty() {
@@ -70,6 +102,28 @@ pub fn Lesson() -> Element {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+fn ReadyButton() -> Element {
+    rsx! {
+        button { class: "button is-large is-primary is-outlined",
+            span { class: "icon is-large",
+                i { class: "fas fa-seedling fa-xl" }
+            }
+        }
+    }
+}
+
+#[component]
+fn LearnedButton() -> Element {
+    rsx! {
+        button { class: "button is-large is-ghost has-text-warning",
+            span { class: "icon is-large",
+                i { class: "fas fa-star fa-xl" }
             }
         }
     }

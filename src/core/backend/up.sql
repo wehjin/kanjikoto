@@ -16,24 +16,13 @@ CREATE INDEX idx_lesson_creator ON lessons (creator_id);
 
 CREATE TABLE phrases
 (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    prompt      TEXT    NOT NULL,
-    reading     TEXT    NOT NULL,
-    translation TEXT    NOT NULL,
-    edited_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    lesson_id   INTEGER NOT NULL,
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    lesson_id          INTEGER NOT NULL,
+    prompt             TEXT    NOT NULL,
+    reading            TEXT    NOT NULL,
+    translation        TEXT    NOT NULL,
+    content_changed_at REAL    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    learned_at         REAL             DEFAULT NULL,
     FOREIGN KEY (lesson_id) REFERENCES lessons (id) ON DELETE CASCADE
 );
 CREATE INDEX idx_phrase_lesson ON phrases (lesson_id);
-
-CREATE TABLE scores
-(
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    score     INTEGER NOT NULL DEFAULT 0,
-    scored_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    phrase_id INTEGER NOT NULL,
-    user_id   TEXT    NOT NULL,
-    FOREIGN KEY (phrase_id) REFERENCES phrases (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-CREATE INDEX idx_score_phrase_user ON scores (phrase_id, user_id);
