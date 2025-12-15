@@ -2,7 +2,6 @@ use crate::core::data::{import_csv, lesson_view, ImportDetails, LessonView, Phra
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::net::Shutdown::Read;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Store)]
 enum Mode {
