@@ -2,8 +2,13 @@ use crate::core::data::{Lesson, Phrase, User};
 use rusqlite::params;
 use std::path::Path;
 use thiserror::Error;
+
+pub mod misc;
+
 mod insert_lesson;
 pub use insert_lesson::InsertLesson;
+mod query_lesson;
+pub use query_lesson::QueryLessonStatus;
 
 #[derive(Error, Debug)]
 pub enum StorageError {
@@ -98,27 +103,48 @@ pub fn get_users(conn: &rusqlite::Connection) -> Vec<User> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::backend::read_user_lesson;
-    use crate::core::backend::InsertLesson;
-    use crate::core::data::NewPhrase;
+    use crate::core::backend::insert_lesson::UpdateLessonTimes;
+    use crate::core::backend::{
+        connect, get_users, read_phrases, read_user_lesson, InsertLesson,
+        QueryLessonStatus,
+    };
+    use crate::core::data::{LessonStatus, NewPhrase};
+
+    pub fn today_at_3am(db: &rusqlite::Connection) -> Result<f64, rusqlite::Error> {
+        db.query_row(
+            "SELECT julianday('now','localtime', 'start of day', '+3 hours')",
+            [],
+            |row| Ok(row.get(0)?),
+        )
+    }
 
     #[test]
     fn it_works() {
-        let mut conn = super::connect(None);
+        let mut conn = connect(None);
         let admin = {
-            let users = super::get_users(&conn);
+            let users = get_users(&conn);
             assert_eq!(users.len(), 1);
             users.into_iter().next().unwrap()
         };
 
+        let today_at_3am = today_at_3am(&conn).unwrap();
         InsertLesson {
             title: "Aggrieved Ch1".to_string(),
             owner: admin.id.clone(),
-            phrases: vec![NewPhrase {
-                prompt: "嫌".to_string(),
-                reading: "いや".to_string(),
-                translation: "unpleasant".to_string(),
-            }],
+            phrases: vec![
+                NewPhrase {
+                    prompt: "嫌".to_string(),
+                    reading: "いや".to_string(),
+                    translation: "unpleasant".to_string(),
+                    content_changed_at: Some(today_at_3am - 0.1),
+                },
+                NewPhrase {
+                    prompt: "必要".to_string(),
+                    reading: "ひつよう".to_string(),
+                    translation: "necessary".to_string(),
+                    content_changed_at: Some(today_at_3am - 0.1),
+                },
+            ],
         }
         .apply(&mut conn)
         .expect("Failed to insert lesson");
@@ -127,8 +153,80 @@ mod tests {
             .expect("Failed to fetch lesson")
             .unwrap();
         assert_eq!(lesson.title, "Aggrieved Ch1");
-        let phrases =
-            super::read_phrases(lesson.lesson_id, &conn).expect("Failed to fetch phrases");
-        assert_eq!(phrases.len(), 1);
+        let phrases = read_phrases(lesson.lesson_id, &conn).expect("Failed to fetch phrases");
+        let phrase_ids = phrases.iter().map(|p| p.phrase_id).collect::<Vec<_>>();
+        assert_eq!(phrase_ids.len(), 2);
+        let mut now = today_at_3am + 0.11;
+        {
+            assert_eq!(
+                QueryLessonStatus {
+                    lesson_id: lesson.lesson_id,
+                    now,
+                }
+                .apply(&conn)
+                .expect("Failed to fetch lesson status"),
+                LessonStatus {
+                    ready: 2,
+                    learned: 0
+                }
+            );
+        }
+        now += 0.01;
+        {
+            UpdateLessonTimes {
+                phrase_ids: vec![phrase_ids[0]],
+                now,
+            }
+            .apply(&mut conn)
+            .expect("Failed to update lesson time");
+            assert_eq!(
+                QueryLessonStatus {
+                    lesson_id: lesson.lesson_id,
+                    now,
+                }
+                .apply(&conn)
+                .expect("Failed to fetch lesson status"),
+                LessonStatus {
+                    ready: 1,
+                    learned: 1
+                }
+            );
+        }
+        now += 0.01;
+        {
+            UpdateLessonTimes {
+                phrase_ids: vec![phrase_ids[1]],
+                now,
+            }
+            .apply(&mut conn)
+            .expect("Failed to update lesson time");
+            assert_eq!(
+                QueryLessonStatus {
+                    lesson_id: lesson.lesson_id,
+                    now,
+                }
+                .apply(&conn)
+                .expect("Failed to fetch lesson status"),
+                LessonStatus {
+                    ready: 0,
+                    learned: 2
+                }
+            );
+        }
+        now += 1.0;
+        {
+            assert_eq!(
+                QueryLessonStatus {
+                    lesson_id: lesson.lesson_id,
+                    now,
+                }
+                .apply(&conn)
+                .expect("Failed to fetch lesson status"),
+                LessonStatus {
+                    ready: 2,
+                    learned: 0,
+                }
+            );
+        }
     }
 }

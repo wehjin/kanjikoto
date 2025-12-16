@@ -18,11 +18,12 @@ pub struct Lesson {
     pub creator_id: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct NewPhrase {
     pub prompt: String,
     pub reading: String,
     pub translation: String,
+    pub content_changed_at: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -59,7 +60,7 @@ pub struct LessonView {
 #[get("/api/lesson_view")]
 pub async fn lesson_view() -> Result<Option<LessonView>> {
     use db::prelude::*;
-    let db = DB.lock().unwrap();
+    let db = DB.lock().expect("Failed to lock database");
     if let Some(lesson) = read_user_lesson("admin", &db)? {
         let phrases = read_phrases(lesson.lesson_id, &db)?
             .into_iter()
@@ -96,6 +97,7 @@ pub async fn import_csv(details: ImportDetails) -> Result<i64> {
             prompt: d.kanji,
             reading: d.yomi,
             translation: d.meaning,
+            content_changed_at: None,
         })
         .collect::<Vec<_>>();
     let insert_lesson = InsertLesson {
@@ -108,4 +110,36 @@ pub async fn import_csv(details: ImportDetails) -> Result<i64> {
     let mut db = DB.lock().expect("Failed to lock database");
     let lesson_id = insert_lesson.apply(&mut db)?;
     Ok(lesson_id)
+}
+
+#[server]
+pub async fn query_lesson_status(lesson_id: i64) -> Result<LessonStatus> {
+    use crate::core::backend::misc::now_localtime;
+    use crate::core::backend::QueryLessonStatus;
+    use db::prelude::*;
+    let db = DB.lock().expect("Failed to lock database");
+    let status = QueryLessonStatus {
+        lesson_id,
+        now: now_localtime(&db)?,
+    }
+    .apply(&db)?;
+    Ok(status)
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct LessonStatus {
+    pub ready: usize,
+    pub learned: usize,
+}
+
+impl LessonStatus {
+    const SESSION_SIZE: usize = 20;
+    fn sessions(count: usize) -> usize {
+        let sessions = count / Self::SESSION_SIZE;
+        let remaining = count % Self::SESSION_SIZE;
+        sessions + if remaining > 0 { 1 } else { 0 }
+    }
+    pub fn to_ready_learned(&self) -> (usize, usize) {
+        (Self::sessions(self.ready), Self::sessions(self.learned))
+    }
 }

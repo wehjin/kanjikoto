@@ -1,4 +1,4 @@
-use crate::core::data::{import_csv, lesson_view, ImportDetails, PhraseView};
+use crate::core::data::{import_csv, lesson_view, query_lesson_status, ImportDetails, PhraseView};
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +28,7 @@ fn LessonTabs(current_tab: Signal<LessonTab>) -> Element {
         }
     }
     rsx! {
-        div { class: "tabs is-medium",
+        div { class: "tabs is-centered is-medium",
             ul {
                 TabItem { tab: LessonTab::Today, current_tab: current_tab.clone() }
                 TabItem { tab: LessonTab::Phrases, current_tab: current_tab.clone() }
@@ -49,7 +49,7 @@ pub fn Lesson() -> Element {
         Ok(()) as Result<()>
     });
     rsx! {
-        section { class: "section",
+        footer { class: "footer",
             match current_lesson.read().clone() {
                 None => rsx! {
                     div { class: "block",
@@ -75,19 +75,17 @@ pub fn Lesson() -> Element {
                         h1{ class: "title", {lesson.title} }
                     }
                     LessonTabs{ current_tab }
-                    div { class: "container",
-                        match current_tab() {
-                            LessonTab::Today => rsx! {
-                                TodaySection { lesson_id: current_lesson_id }
-                            },
-                            LessonTab::Phrases => rsx! {
-                                if lesson.phrases.is_empty() {
-                                    "No phrases yet"
-                                } else {
-                                    PhraseTable{ phrases: lesson.phrases }
-                                }
-                            },
-                        }
+                    match current_tab() {
+                        LessonTab::Today => rsx! {
+                            TodaySection { lesson_id: current_lesson_id }
+                        },
+                        LessonTab::Phrases => rsx! {
+                            if lesson.phrases.is_empty() {
+                                "No phrases yet"
+                            } else {
+                                PhraseTable{ phrases: lesson.phrases }
+                            }
+                        },
                     }
                 }
             }
@@ -98,29 +96,34 @@ pub fn Lesson() -> Element {
 #[component]
 fn TodaySection(lesson_id: ReadSignal<Option<i64>>) -> Element {
     match lesson_id() {
-        None => rsx! {
-            div { class: "skeleton-block" }
-        },
-        Some(_lesson_id) => {
-            let ready = 5usize;
-            let learned = 10usize;
-            rsx! {
-                div { class: "columns",
-                    div { class: "column m-3 is-flex is-flex-direction-column",
-                        StatusCard { title: "Ready", style: "is-primary",
-                            div { class: "buttons",
-                                for _ in 0..ready {
-                                    ReadyButton{}
-                                }
-                            }
+        None => rsx! { div { class: "skeleton-block" } },
+        Some(lesson_id) => rsx! { TodayLessonStatus{ lesson_id } },
+    }
+}
+
+#[component]
+fn TodayLessonStatus(lesson_id: i64) -> Element {
+    let status = use_loader(move || async move { query_lesson_status(lesson_id).await })?();
+    let (ready, learned) = status.to_ready_learned();
+    rsx! {
+        div { class: "columns",
+            div { class: "column m-3 is-flex is-flex-direction-column",
+                StatusCard { title: "Ready", style: "is-primary",
+                    div { class: "buttons",
+                        for _ in 0..ready {
+                            ReadyButton{}
                         }
                     }
-                    div { class: "column m-3 is-flex is-flex-direction-column",
-                        StatusCard { title: "Learned", style: "is-warning",
-                            p { class: "buttons",
-                                for _ in 0..learned {
-                                    LearnedIcon{}
-                                }
+                }
+            }
+            div { class: "column m-3 is-flex is-flex-direction-column",
+                StatusCard { title: "Learned", style: "is-warning",
+                    if learned == 0 {
+                        p { class: "subtitle is-5 has-text-weight-light", "None today yet" }
+                    } else {
+                        p { class: "buttons",
+                            for _ in 0..learned {
+                                LearnedIcon{}
                             }
                         }
                     }
@@ -166,21 +169,36 @@ fn LearnedIcon() -> Element {
 
 #[component]
 fn PhraseTable(phrases: ReadSignal<Vec<PhraseView>>) -> Element {
+    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    struct PhraseRow {
+        number: String,
+        phrase: PhraseView,
+    }
+    let rows = phrases
+        .iter()
+        .enumerate()
+        .map(|(index, phrase)| PhraseRow {
+            number: (index + 1).to_string(),
+            phrase: phrase.cloned(),
+        })
+        .collect::<Vec<_>>();
     rsx! {
         table { class: "table is-striped is-hoverable is-fullwidth",
             thead {
                 tr {
+                    th { "#"}
                     th { "Prompt" }
                     th { "Reading" }
                     th { "Meaning" }
                 }
             }
             tbody {
-                for phrase in phrases.iter() {
+                for row in rows.iter() {
                     tr {
-                        td { {phrase.prompt.clone()} }
-                        td { {phrase.reading.clone()} }
-                        td { {phrase.meaning.clone()} }
+                        td { { row.number.clone() } }
+                        td { { row.phrase.prompt.clone()} }
+                        td { { row.phrase.reading.clone()} }
+                        td { { row.phrase.meaning.clone()} }
                     }
                 }
             }

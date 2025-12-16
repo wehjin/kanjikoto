@@ -21,7 +21,7 @@ CREATE TABLE phrases
     prompt             TEXT    NOT NULL,
     reading            TEXT    NOT NULL,
     translation        TEXT    NOT NULL,
-    content_changed_at REAL    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    content_changed_at REAL    NOT NULL DEFAULT (julianday('now', 'localtime')),
     learned_at         REAL             DEFAULT NULL,
     FOREIGN KEY (lesson_id) REFERENCES lessons (id) ON DELETE CASCADE
 );
