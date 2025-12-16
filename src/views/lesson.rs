@@ -41,11 +41,8 @@ pub fn Lesson() -> Element {
                         div { class: "container",
                             div { class: "columns",
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header",
-                                        h6 { class: "title is-6 ml-3", "Ready"}
-                                    }
-                                    div { class: "box mt-3 is-flex-grow-1",
-                                        p { class: "buttons",
+                                    StatusCard { title: "Ready", style: "is-primary",
+                                        div { class: "buttons",
                                             for _ in 0..12 {
                                                 ReadyButton{}
                                             }
@@ -53,10 +50,7 @@ pub fn Lesson() -> Element {
                                     }
                                 }
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header",
-                                        h6 { class: "title is-6 ml-3", "Learned"}
-                                    }
-                                    div { class: "box mt-3 is-flex-grow-1",
+                                    StatusCard { title: "Learned", style: "is-warning",
                                         p { class: "buttons",
                                             for _ in 0..5 {
                                                 LearnedIcon{}
@@ -77,6 +71,20 @@ pub fn Lesson() -> Element {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn StatusCard(title: String, style: String, children: Element) -> Element {
+    rsx! {
+        article { class: "panel {style} is-flex-grow-1",
+            p { class: "panel-heading is-small", {title} }
+            p { class: "panel-tabs",
+                div { class: "p-4",
+                    {children}
                 }
             }
         }
