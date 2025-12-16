@@ -41,8 +41,8 @@ pub fn Lesson() -> Element {
                         div { class: "container",
                             div { class: "columns",
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header has-text-centered",
-                                        h6 { class: "title is-6", "Ready"}
+                                    div { class: "box-header",
+                                        h6 { class: "title is-6 ml-3", "Ready"}
                                     }
                                     div { class: "box mt-3 is-flex-grow-1",
                                         p { class: "buttons",
@@ -53,8 +53,8 @@ pub fn Lesson() -> Element {
                                     }
                                 }
                                 div { class: "column m-3 is-flex is-flex-direction-column",
-                                    div { class: "box-header has-text-centered",
-                                        h6 { class: "title is-6", "Learned"}
+                                    div { class: "box-header",
+                                        h6 { class: "title is-6 ml-3", "Learned"}
                                     }
                                     div { class: "box mt-3 is-flex-grow-1",
                                         p { class: "buttons",
