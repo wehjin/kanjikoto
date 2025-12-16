@@ -1,61 +1,38 @@
-use crate::core::data::{import_csv, lesson_view, ImportDetails, LessonView, PhraseView};
+use crate::core::data::{import_csv, lesson_view, ImportDetails, PhraseView};
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Store)]
-enum Mode {
-    Loading,
-    Importing,
-    Viewing(LessonView),
-}
-
 #[component]
 pub fn Lesson() -> Element {
-    let mut mode = use_store(|| Mode::Loading);
-    let mut loader = use_loader(move || async move { lesson_view().await })?;
-    use_effect(move || {
-        if let Some(lesson) = loader.read().clone() {
-            mode.set(Mode::Viewing(lesson));
-        } else {
-            mode.set(Mode::Importing);
-        }
-    });
-    let mut importing = use_signal(|| false);
+    let mut current_lesson = use_loader(move || async move { lesson_view().await })?;
+    let mut show_import_dialog = use_signal(|| false);
     let mut import_csv = use_action(move |details| async move {
         import_csv(details).await.expect("Failed to import CSV");
-        loader.restart();
+        current_lesson.restart();
         Ok(()) as Result<()>
     });
     rsx! {
         section { class: "section",
-            match mode.read().clone() {
-                Mode::Loading => rsx! {
-                    div { class: "block",
-                        h1 { class: "title", "Lesson" }
-                    }
-                    div { class: "skeleton-block"}
-                },
-                Mode::Importing => rsx! {
+            match current_lesson.read().clone() {
+                None => rsx! {
                     div { class: "block",
                         h1 { class: "title",
                             "Lesson"
                             button { class: "button ml-5",
-                                onclick:  move |_| *importing.write() = true,
+                                onclick:  move |_| *show_import_dialog.write() = true,
                                 "Import"
                             }
                         }
                     }
-                    if importing.read().clone() {
+                    if show_import_dialog.read().clone() {
                         ImportDialog{
-                            importing: importing,
+                            importing: show_import_dialog,
                             onimport: move |details| async move {
                                 import_csv.call(details);
                             },
                         }
                     }
                 },
-                Mode::Viewing(lesson) => rsx! {
+                Some(lesson) => rsx! {
                     div { class: "block",
                         h1{ class: "title", {lesson.title} }
                     }
