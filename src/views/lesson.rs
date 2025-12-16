@@ -1,9 +1,47 @@
 use crate::core::data::{import_csv, lesson_view, ImportDetails, PhraseView};
 use dioxus::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+enum LessonTab {
+    Today,
+    Phrases,
+}
+
+#[component]
+fn LessonTabs(current_tab: Signal<LessonTab>) -> Element {
+    #[component]
+    fn TabItem(tab: LessonTab, current_tab: Signal<LessonTab>) -> Element {
+        let is_active = tab == current_tab.read().clone();
+        let title = match tab {
+            LessonTab::Today => "Today",
+            LessonTab::Phrases => "Phrases",
+        };
+        rsx! {
+            li { class: if is_active {"is-active"},
+                a {
+                    onclick: move |_| *current_tab.write() = tab,
+                    {title}
+                }
+            }
+        }
+    }
+    rsx! {
+        div { class: "tabs is-medium",
+            ul {
+                TabItem { tab: LessonTab::Today, current_tab: current_tab.clone() }
+                TabItem { tab: LessonTab::Phrases, current_tab: current_tab.clone() }
+            }
+        }
+    }
+}
+
 #[component]
 pub fn Lesson() -> Element {
+    let current_tab = use_signal(|| LessonTab::Today);
     let mut current_lesson = use_loader(move || async move { lesson_view().await })?;
+    let current_lesson_id = use_memo(move || current_lesson().map(|it| it.lesson_id));
     let mut show_import_dialog = use_signal(|| false);
     let mut import_csv = use_action(move |details| async move {
         import_csv(details).await.expect("Failed to import CSV");
@@ -36,38 +74,53 @@ pub fn Lesson() -> Element {
                     div { class: "block",
                         h1{ class: "title", {lesson.title} }
                     }
-                    div { class: "block",
-                        h5 { class: "title is-5", "Today" }
-                        div { class: "container",
-                            div { class: "columns",
-                                div { class: "column m-3 is-flex is-flex-direction-column",
-                                    StatusCard { title: "Ready", style: "is-primary",
-                                        div { class: "buttons",
-                                            for _ in 0..12 {
-                                                ReadyButton{}
-                                            }
-                                        }
-                                    }
+                    LessonTabs{ current_tab }
+                    div { class: "container",
+                        match current_tab() {
+                            LessonTab::Today => rsx! {
+                                TodaySection { lesson_id: current_lesson_id }
+                            },
+                            LessonTab::Phrases => rsx! {
+                                if lesson.phrases.is_empty() {
+                                    "No phrases yet"
+                                } else {
+                                    PhraseTable{ phrases: lesson.phrases }
                                 }
-                                div { class: "column m-3 is-flex is-flex-direction-column",
-                                    StatusCard { title: "Learned", style: "is-warning",
-                                        p { class: "buttons",
-                                            for _ in 0..5 {
-                                                LearnedIcon{}
-                                            }
-                                        }
-                                    }
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn TodaySection(lesson_id: ReadSignal<Option<i64>>) -> Element {
+    match lesson_id() {
+        None => rsx! {
+            div { class: "skeleton-block" }
+        },
+        Some(_lesson_id) => {
+            let ready = 5usize;
+            let learned = 10usize;
+            rsx! {
+                div { class: "columns",
+                    div { class: "column m-3 is-flex is-flex-direction-column",
+                        StatusCard { title: "Ready", style: "is-primary",
+                            div { class: "buttons",
+                                for _ in 0..ready {
+                                    ReadyButton{}
                                 }
                             }
                         }
                     }
-                    div { class: "block",
-                        h5 { class: "title is-5", "Phrases" }
-                        div { class: "container",
-                            if lesson.phrases.is_empty() {
-                                div { class: "block", "No phrases yet" }
-                            } else {
-                                div { class: "block", PhraseTable{ phrases: lesson.phrases } }
+                    div { class: "column m-3 is-flex is-flex-direction-column",
+                        StatusCard { title: "Learned", style: "is-warning",
+                            p { class: "buttons",
+                                for _ in 0..learned {
+                                    LearnedIcon{}
+                                }
                             }
                         }
                     }
