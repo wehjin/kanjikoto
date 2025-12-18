@@ -17,7 +17,11 @@ pub fn Practice() -> Element {
                     h2 { class: "subtitle", "Exercise your reading skills" }
                 }
                 div { class: "block",
-                    SessionSection {}
+                    div { class: "columns",
+                        div { class: "column is-half-tablet is-one-third-desktop",
+                            PracticeSessionSection {}
+                        }
+                    }
                 }
             }
         }
@@ -30,10 +34,11 @@ enum SessionState {
     Prompt { deck: Deck },
     Learn { deck: Deck },
     Check { deck: Deck },
+    Done { deck: Deck },
 }
 
 #[component]
-fn SessionSection() -> Element {
+pub fn PracticeSessionSection(onsave: Option<EventHandler<Vec<Card>>>) -> Element {
     let mut session = use_signal(|| SessionState::Start);
 
     let mut start_action = use_action(move |_input: ()| async move {
@@ -45,32 +50,68 @@ fn SessionSection() -> Element {
         *session.write() = SessionState::Prompt { deck };
         Ok(()) as Result<()>
     });
-
-    rsx! {
-        div { class: "columns",
-            div { class: "column is-half-tablet is-one-third-desktop",
-                match session.read().cloned() {
-                    SessionState::Start => rsx! {
-                        button {
-                            class: "button is-primary",
-                            onclick: move |_| {
-                                start_action.call(());
-                            },
-                            "Start"
+    match session() {
+        SessionState::Start => rsx! {
+            button {
+                class: "button is-primary",
+                onclick: move |_| {
+                    start_action.call(());
+                },
+                "Start"
+            }
+        },
+        SessionState::Done { deck } => rsx! {
+            div { class: "block",
+                div { class: "title is-5", "Stats" }
+                div { class: "container",
+                    div { class: "field is-grouped is-grouped-multiline",
+                        div { class: "control",
+                            div { class: "tags has-addons",
+                                span { class: "tag is-dark", "Passed"}
+                                span { class: "tag is-success", "{deck.stats.passed}"}
+                            }
                         }
-                    },
-                    SessionState::Prompt{ deck } => rsx! {
-                        PromptSection { deck, session }
-                    },
-                    SessionState::Learn{ deck } => rsx! {
-                        LearnSection { deck, session }
-                    },
-                    SessionState::Check{ deck } => rsx! {
-                        CheckSection { deck, session }
-                    },
+                        div { class: "control",
+                            div { class: "tags has-addons",
+                                span { class: "tag is-dark", "Failed"}
+                                span { class: "tag is-warning", "{deck.stats.failed}"}
+                            }
+                        }
+                        div { class: "control",
+                            div { class: "tags has-addons",
+                                span { class: "tag is-dark", "Learned"}
+                                span { class: "tag is-info", "{deck.stats.learned}"}
+                            }
+                        }
+                    }
                 }
             }
-        }
+            div { class: "block",
+                button {
+                    class: "button is-primary",
+                    onclick: move |_| {
+                        *session.write() = SessionState::Start;
+                        if let Some(onsave) = onsave {
+                            onsave.call(deck.cards.clone());
+                        }
+                    },
+                    if onsave.is_some() {
+                        "Save"
+                    } else {
+                        "Done"
+                    }
+                }
+            }
+        },
+        SessionState::Prompt { deck } => rsx! {
+            PromptSection { deck, session }
+        },
+        SessionState::Learn { deck } => rsx! {
+            LearnSection { deck, session }
+        },
+        SessionState::Check { deck } => rsx! {
+            CheckSection { deck, session }
+        },
     }
 }
 
@@ -133,7 +174,7 @@ fn LearnSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                 a { class: "card-footer-item",
                     href: "#",
                     onclick: move |_| {
-                        let deck = deck.clone().next();
+                        let deck = deck.clone().learn();
                         *session.write() = SessionState::Prompt { deck };
                     },
                     "Next" }
@@ -168,7 +209,7 @@ fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                         move |_| {
                             let deck = deck.clone().pass();
                             *session.write() = if deck.mastered {
-                                SessionState::Start
+                                SessionState::Done { deck }
                             } else {
                                 SessionState::Prompt { deck}
                             };
@@ -202,8 +243,8 @@ fn BackContent(card: Card, turns: usize) -> Element {
         }
         div { class: "container",
             section { class: "section",
-                h1 { class: "title", {title} }
-                div { class: "tags are-medium",
+                h1 { class: "title has-text-centered", {title} }
+                div { class: "tags are-medium is-centered",
                     for subtitle in subtitles {
                         span { class: "tag is-warning is-light", "{subtitle}"}
                     }

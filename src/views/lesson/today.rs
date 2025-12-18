@@ -1,28 +1,64 @@
-use crate::core::data::query_lesson_status;
+use crate::core::data::card::Card;
+use crate::core::data::lesson_status::LessonStatus;
+use crate::core::data::{query_lesson_status, update_practice_cards};
+use crate::views::practice::PracticeSessionSection;
 use dioxus::core::Element;
 use dioxus::core_macro::component;
-use dioxus::fullstack::use_loader;
+use dioxus::fullstack::{use_loader, Loader};
 use dioxus::prelude::*;
 
 #[component]
-pub fn TodaySection(lesson_id: ReadSignal<Option<i64>>) -> Element {
-    match lesson_id() {
-        None => rsx! { div { class: "skeleton-block" } },
-        Some(lesson_id) => rsx! { TodayLessonStatus{ lesson_id } },
+pub fn TodaySection(lesson_id: i64) -> Element {
+    let mut practicing = use_signal(|| false);
+    let mut lesson_status =
+        use_loader(move || async move { query_lesson_status(lesson_id).await })?;
+
+    let mut record_practice = use_action(move |cards: Vec<Card>| async move {
+        update_practice_cards(cards).await?;
+        *practicing.write() = false;
+        lesson_status.restart();
+        Ok(()) as Result<()>
+    });
+
+    rsx! {
+        TodayLessonStatus{ lesson_status, practicing: practicing.clone() }
+        if practicing() {
+            div { class: "modal is-active",
+                div { class: "modal-background" }
+                div { class: "modal-card",
+                    header { class: "modal-card-head",
+                        div { class: "modal-card-title",
+                            p { class: "title", "Reading Practice"}
+                            p { class: "subtitle", "Read today's cards" }
+                        }
+                        button { class: "delete", aria_label: "close", onclick: move |_| *practicing.write() = false }
+                    }
+                    footer { class: "modal-card-foot",
+                        div { class: "container",
+                            PracticeSessionSection {
+                                onsave: move |cards| record_practice.call(cards)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 #[component]
-fn TodayLessonStatus(lesson_id: i64) -> Element {
-    let status = use_loader(move || async move { query_lesson_status(lesson_id).await })?();
-    let (ready, learned) = status.to_ready_learned();
+fn TodayLessonStatus(
+    lesson_status: Loader<LessonStatus>,
+    practicing: WriteSignal<bool>,
+) -> Element {
+    let (ready, learned) = lesson_status().to_ready_learned();
     rsx! {
         div { class: "columns",
             div { class: "column m-3 is-flex is-flex-direction-column",
                 StatusCard { title: "Ready", style: "is-primary",
                     div { class: "buttons",
                         for _ in 0..ready {
-                            ReadyButton{}
+                            ReadyButton{ onclick: move |_| *practicing.write() = true}
                         }
                     }
                 }
@@ -59,9 +95,11 @@ fn StatusCard(title: String, style: String, children: Element) -> Element {
 }
 
 #[component]
-fn ReadyButton() -> Element {
+fn ReadyButton(onclick: EventHandler<MouseEvent>) -> Element {
     rsx! {
-        button { class: "button is-large is-primary is-outlined",
+        button {
+            class: "button is-large is-primary is-outlined",
+            onclick,
             span { class: "icon is-large",
                 i { class: "fas fa-seedling fa-xl" }
             }

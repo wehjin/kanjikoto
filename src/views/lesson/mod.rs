@@ -14,7 +14,6 @@ pub mod today;
 pub fn Lesson() -> Element {
     let current_tab = use_signal(|| LessonTab::Today);
     let mut current_lesson = use_loader(move || async move { lesson_view().await })?;
-    let current_lesson_id = use_memo(move || current_lesson().map(|it| it.lesson_id));
     let mut show_import_dialog = use_signal(|| false);
     let mut import_csv = use_action(move |details| async move {
         import_csv(details).await.expect("Failed to import CSV");
@@ -23,7 +22,7 @@ pub fn Lesson() -> Element {
     });
     rsx! {
         footer { class: "footer",
-            match current_lesson.read().clone() {
+            match current_lesson() {
                 None => rsx! {
                     div { class: "block",
                         h1 { class: "title",
@@ -50,7 +49,7 @@ pub fn Lesson() -> Element {
                     LessonTabs{ current_tab }
                     match current_tab() {
                         LessonTab::Today => rsx! {
-                            TodaySection { lesson_id: current_lesson_id }
+                            TodaySection { lesson_id: lesson.lesson_id }
                         },
                         LessonTab::Phrases => rsx! {
                             if lesson.phrases.is_empty() {

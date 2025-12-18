@@ -30,6 +30,7 @@ WHERE
             let ready_count: i64 = row.get(0)?;
             let total_count: i64 = row.get(1)?;
             Ok(LessonStatus {
+                lesson_id,
                 ready: ready_count as usize,
                 learned: (total_count - ready_count) as usize,
             })

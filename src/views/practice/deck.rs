@@ -1,5 +1,5 @@
 use crate::core::data::card::{Card, Goal};
-use rand::prelude::StdRng;
+use rand::prelude::{SliceRandom, StdRng};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Deck {
@@ -7,6 +7,14 @@ pub struct Deck {
     pub top: Card,
     pub cards: Vec<Card>,
     pub mastered: bool,
+    pub stats: Stats,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Stats {
+    pub learned: usize,
+    pub passed: usize,
+    pub failed: usize,
 }
 
 impl Deck {
@@ -17,6 +25,11 @@ impl Deck {
             top,
             cards,
             mastered: false,
+            stats: Stats {
+                learned: 0,
+                passed: 0,
+                failed: 0,
+            },
         }
     }
     pub fn turns_remaining(&self) -> usize {
@@ -26,15 +39,19 @@ impl Deck {
             .fold(0, |acc, card| acc + card.turns_remaining());
         self.top.turns_remaining() + card_turns
     }
-    pub fn next(self) -> Self {
-        self.fail()
+    pub fn learn(mut self) -> Self {
+        self.stats.learned += 1;
+        self.top.goal = Goal::Learn;
+        self.cycle_top()
     }
 
     pub fn fail(mut self) -> Self {
+        self.stats.failed += 1;
         self.top.goal = Goal::Learn;
         self.cycle_top()
     }
     pub fn pass(mut self) -> Self {
+        self.stats.passed += 1;
         self.top.goal = match self.top.goal {
             Goal::Learn => Goal::Review,
             Goal::Review => Goal::Celebrate,
@@ -50,8 +67,13 @@ impl Deck {
     }
     fn cycle_top(self) -> Self {
         let Self {
-            rng, top, cards, ..
+            mut rng,
+            top,
+            mut cards,
+            stats,
+            ..
         } = self;
+        cards.shuffle(&mut rng);
         let (mut cards, new_top) = find_top(cards);
         match new_top {
             Some(new_top) => {
@@ -61,6 +83,7 @@ impl Deck {
                     top: new_top,
                     cards,
                     mastered: false,
+                    stats,
                 }
             }
             None => Self {
@@ -68,6 +91,7 @@ impl Deck {
                 top,
                 cards,
                 mastered: false,
+                stats,
             },
         }
     }

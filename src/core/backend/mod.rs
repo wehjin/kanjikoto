@@ -6,8 +6,7 @@ use thiserror::Error;
 pub mod lesson;
 pub mod misc;
 
-mod insert_lesson;
-pub use insert_lesson::InsertLesson;
+pub mod insert_lesson;
 
 #[derive(Error, Debug)]
 pub enum StorageError {
@@ -18,11 +17,11 @@ pub enum StorageError {
 pub fn connect(filename: Option<&'static str>) -> rusqlite::Connection {
     let (conn, existed) = if let Some(filename) = filename {
         let db_existed = Path::new(filename).exists();
-        let conn = rusqlite::Connection::open(filename).expect("Failed to open database");
+        let conn = rusqlite::Connection::open(filename).expect("Failed to open the database");
         (conn, db_existed)
     } else {
         let conn =
-            rusqlite::Connection::open_in_memory().expect("Failed to open in-memory database");
+            rusqlite::Connection::open_in_memory().expect("Failed to open an in-memory database");
         (conn, false)
     };
     conn.pragma_update(None, "foreign_keys", "ON")
@@ -36,11 +35,9 @@ pub fn connect(filename: Option<&'static str>) -> rusqlite::Connection {
         let up = include_str!("up.sql");
         conn.execute_batch(up)
             .expect("Failed to run database upgrade");
-        conn.execute(
-            "INSERT INTO users (id, is_admin) VALUES (?1, ?2)",
-            (&admin.id, &admin.is_admin),
-        )
-        .expect("Failed to create admin user");
+        const SQL: &str = "INSERT INTO users (id, is_admin) VALUES (?1, ?2)";
+        conn.execute(SQL, (&admin.id, &admin.is_admin))
+            .expect("Failed to create admin user");
     }
     conn
 }
@@ -102,9 +99,9 @@ pub fn get_users(conn: &rusqlite::Connection) -> Vec<User> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::backend::insert_lesson::UpdateLessonTimes;
+    use crate::core::backend::insert_lesson::{InsertLesson, UpdateLessonTimes};
     use crate::core::backend::lesson::{QueryLessonStatus, QueryPracticeCards};
-    use crate::core::backend::{connect, get_users, read_phrases, read_user_lesson, InsertLesson};
+    use crate::core::backend::{connect, get_users, read_phrases, read_user_lesson};
     use crate::core::data::lesson_status::LessonStatus;
     use crate::core::data::NewPhrase;
 
@@ -145,10 +142,10 @@ mod tests {
             ],
         }
         .apply(&mut conn)
-        .expect("Failed to insert lesson");
+        .expect("Failed to insert the lesson");
 
         let lesson = read_user_lesson(&admin.id, &conn)
-            .expect("Failed to fetch lesson")
+            .expect("Failed to fetch the lesson")
             .unwrap();
         assert_eq!(lesson.title, "Aggrieved Ch1");
         let phrases = read_phrases(lesson.lesson_id, &conn).expect("Failed to fetch phrases");
@@ -165,6 +162,7 @@ mod tests {
             assert_eq!(
                 lesson_status,
                 LessonStatus {
+                    lesson_id: lesson.lesson_id,
                     ready: 2,
                     learned: 0
                 }
@@ -193,6 +191,7 @@ mod tests {
                 .apply(&conn)
                 .expect("Failed to fetch lesson status"),
                 LessonStatus {
+                    lesson_id: lesson.lesson_id,
                     ready: 1,
                     learned: 1
                 }
@@ -214,6 +213,7 @@ mod tests {
                 .apply(&conn)
                 .expect("Failed to fetch lesson status"),
                 LessonStatus {
+                    lesson_id: lesson.lesson_id,
                     ready: 0,
                     learned: 2
                 }
@@ -229,6 +229,7 @@ mod tests {
                 .apply(&conn)
                 .expect("Failed to fetch lesson status"),
                 LessonStatus {
+                    lesson_id: lesson.lesson_id,
                     ready: 2,
                     learned: 0,
                 }

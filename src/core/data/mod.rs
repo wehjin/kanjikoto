@@ -93,6 +93,9 @@ pub struct ImportDetails {
 
 #[post("/api/import_csv")]
 pub async fn import_csv(details: ImportDetails) -> Result<i64> {
+    use crate::core::backend::insert_lesson::InsertLesson;
+    use db::prelude::*;
+
     let csv_url = details.csv_url.trim();
     let drills = get_drills_url(csv_url).await;
     let phrases = drills
@@ -109,8 +112,6 @@ pub async fn import_csv(details: ImportDetails) -> Result<i64> {
         owner: "admin".to_string(),
         phrases,
     };
-    use crate::core::backend::InsertLesson;
-    use db::prelude::*;
     let mut db = DB.lock().expect("Failed to lock the database");
     let lesson_id = insert_lesson.apply(&mut db)?;
     Ok(lesson_id)
@@ -136,4 +137,19 @@ pub async fn query_practice_cards(lesson_id: i64) -> Result<Vec<Card>> {
     let now = now_localtime(&db)?;
     let cards = QueryPracticeCards { lesson_id, now }.apply(&db)?;
     Ok(cards)
+}
+
+#[server]
+pub async fn update_practice_cards(cards: Vec<Card>) -> Result<()> {
+    use crate::core::backend::insert_lesson::UpdateLessonTimes;
+    use crate::core::backend::misc::now_localtime;
+    use db::prelude::*;
+    let mut db = DB.lock().expect("Failed to lock the database");
+    let now = now_localtime(&db)?;
+    UpdateLessonTimes {
+        phrase_ids: cards.iter().map(|c| c.id).collect(),
+        now,
+    }
+    .apply(&mut db)?;
+    Ok(())
 }

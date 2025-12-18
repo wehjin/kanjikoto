@@ -4,6 +4,7 @@ pub const SESSION_SIZE: usize = 5;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LessonStatus {
+    pub lesson_id: i64,
     pub ready: usize,
     pub learned: usize,
 }
