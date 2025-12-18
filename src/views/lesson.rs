@@ -119,7 +119,7 @@ fn TodayLessonStatus(lesson_id: i64) -> Element {
             div { class: "column m-3 is-flex is-flex-direction-column",
                 StatusCard { title: "Learned", style: "is-warning",
                     if learned == 0 {
-                        p { class: "subtitle is-5 has-text-weight-light", "None today yet" }
+                        p { "None today" }
                     } else {
                         p { class: "buttons",
                             for _ in 0..learned {

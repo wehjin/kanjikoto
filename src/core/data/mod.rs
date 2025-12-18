@@ -1,9 +1,13 @@
 use crate::core::api::get_drills_url;
+use crate::core::data::card::Card;
 use dioxus::prelude::*;
+use lesson_status::LessonStatus;
 use serde::{Deserialize, Serialize};
 
+pub mod card;
 #[cfg(feature = "server")]
 pub mod db;
+pub mod lesson_status;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -60,7 +64,7 @@ pub struct LessonView {
 #[get("/api/lesson_view")]
 pub async fn lesson_view() -> Result<Option<LessonView>> {
     use db::prelude::*;
-    let db = DB.lock().expect("Failed to lock database");
+    let db = DB.lock().expect("Failed to lock the database");
     if let Some(lesson) = read_user_lesson("admin", &db)? {
         let phrases = read_phrases(lesson.lesson_id, &db)?
             .into_iter()
@@ -107,39 +111,29 @@ pub async fn import_csv(details: ImportDetails) -> Result<i64> {
     };
     use crate::core::backend::InsertLesson;
     use db::prelude::*;
-    let mut db = DB.lock().expect("Failed to lock database");
+    let mut db = DB.lock().expect("Failed to lock the database");
     let lesson_id = insert_lesson.apply(&mut db)?;
     Ok(lesson_id)
 }
 
 #[server]
 pub async fn query_lesson_status(lesson_id: i64) -> Result<LessonStatus> {
+    use crate::core::backend::lesson::QueryLessonStatus;
     use crate::core::backend::misc::now_localtime;
-    use crate::core::backend::QueryLessonStatus;
     use db::prelude::*;
-    let db = DB.lock().expect("Failed to lock database");
-    let status = QueryLessonStatus {
-        lesson_id,
-        now: now_localtime(&db)?,
-    }
-    .apply(&db)?;
+    let db = DB.lock().expect("Failed to lock the database");
+    let now = now_localtime(&db)?;
+    let status = QueryLessonStatus { lesson_id, now }.apply(&db)?;
     Ok(status)
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct LessonStatus {
-    pub ready: usize,
-    pub learned: usize,
-}
-
-impl LessonStatus {
-    const SESSION_SIZE: usize = 20;
-    fn sessions(count: usize) -> usize {
-        let sessions = count / Self::SESSION_SIZE;
-        let remaining = count % Self::SESSION_SIZE;
-        sessions + if remaining > 0 { 1 } else { 0 }
-    }
-    pub fn to_ready_learned(&self) -> (usize, usize) {
-        (Self::sessions(self.ready), Self::sessions(self.learned))
-    }
+#[server]
+pub async fn query_practice_cards(lesson_id: i64) -> Result<Vec<Card>> {
+    use crate::core::backend::lesson::QueryPracticeCards;
+    use crate::core::backend::misc::now_localtime;
+    use db::prelude::*;
+    let db = DB.lock().expect("Failed to lock the database");
+    let now = now_localtime(&db)?;
+    let cards = QueryPracticeCards { lesson_id, now }.apply(&db)?;
+    Ok(cards)
 }

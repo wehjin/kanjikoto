@@ -1,11 +1,10 @@
-use crate::core::api;
-use crate::views::practice::card::Card;
+use crate::core::data::card::Card;
+use crate::core::data::{lesson_view, query_practice_cards};
 use deck::Deck;
 use dioxus::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
-pub mod card;
 pub mod deck;
 
 #[component]
@@ -13,7 +12,8 @@ pub fn Practice() -> Element {
     rsx! {
         div { class: "container",
             div { class: "section",
-                TitleSection {}
+                h1 { class: "title", "Practice" }
+                h2 { class: "subtitle", "Practice your reading skills" }
             }
             div { class: "section",
                 SessionSection {}
@@ -23,18 +23,9 @@ pub fn Practice() -> Element {
     }
 }
 
-#[component]
-fn TitleSection() -> Element {
-    rsx! {
-        h1 { class: "title", "Practice" }
-        h2 { class: "subtitle", "Practice your reading skills" }
-    }
-}
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum SessionState {
-    Wait,
-    Start { deck: Deck },
+    Start,
     Prompt { deck: Deck },
     Learn { deck: Deck },
     Check { deck: Deck },
@@ -42,23 +33,30 @@ enum SessionState {
 
 #[component]
 fn SessionSection() -> Element {
-    let mut session = use_signal(|| SessionState::Wait);
-    use_resource(move || async move {
-        let seed_value: u64 = rand::random();
-        let rng = StdRng::seed_from_u64(seed_value);
-        let drills = api::get_drills().await;
-        let deck = Deck::new(drills, rng);
-        *session.write() = SessionState::Start { deck };
+    let mut session = use_signal(|| SessionState::Start);
+
+    let mut start_action = use_action(move |_input: ()| async move {
+        let lesson = lesson_view().await.unwrap().unwrap();
+        let cards = query_practice_cards(lesson.lesson_id).await.unwrap();
+        assert!(cards.len() > 0);
+        let rng = StdRng::seed_from_u64(rand::random());
+        let deck = Deck::from_cards(cards, rng);
+        *session.write() = SessionState::Prompt { deck };
+        Ok(()) as Result<()>
     });
+
     rsx! {
         div { class: "columns",
             div { class: "column is-half-tablet is-one-third-desktop",
                 match session.read().cloned() {
-                    SessionState::Wait => rsx! {
-                        progress { class: "progress is-small is-primary", max: "100", "15%" }
-                    },
-                    SessionState::Start{ deck } => rsx! {
-                        StartSection { deck, session }
+                    SessionState::Start => rsx! {
+                        button {
+                            class: "button is-primary",
+                            onclick: move |_| {
+                                start_action.call(());
+                            },
+                            "Start"
+                        }
                     },
                     SessionState::Prompt{ deck } => rsx! {
                         PromptSection { deck, session }
@@ -71,20 +69,6 @@ fn SessionSection() -> Element {
                     },
                 }
             }
-        }
-    }
-}
-
-#[component]
-fn StartSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
-    rsx! {
-        button {
-            class: "button is-primary",
-            onclick: move |_| {
-                let deck = deck.clone().start();
-                *session.write() = SessionState::Prompt { deck }
-            },
-            "Start"
         }
     }
 }
@@ -108,7 +92,7 @@ fn PromptSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                         }
                     }
                 }
-                section { class: "section  has-text-centered",
+                section { class: "section has-text-centered",
                     h1 { class: "title", {title} }
                 }
             }
@@ -183,7 +167,7 @@ fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                         move |_| {
                             let deck = deck.clone().pass();
                             *session.write() = if deck.mastered {
-                                SessionState::Start { deck }
+                                SessionState::Start
                             } else {
                                 SessionState::Prompt { deck}
                             };

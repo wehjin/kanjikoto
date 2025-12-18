@@ -3,12 +3,11 @@ use rusqlite::params;
 use std::path::Path;
 use thiserror::Error;
 
+pub mod lesson;
 pub mod misc;
 
 mod insert_lesson;
 pub use insert_lesson::InsertLesson;
-mod query_lesson;
-pub use query_lesson::QueryLessonStatus;
 
 #[derive(Error, Debug)]
 pub enum StorageError {
@@ -104,11 +103,10 @@ pub fn get_users(conn: &rusqlite::Connection) -> Vec<User> {
 #[cfg(test)]
 mod tests {
     use crate::core::backend::insert_lesson::UpdateLessonTimes;
-    use crate::core::backend::{
-        connect, get_users, read_phrases, read_user_lesson, InsertLesson,
-        QueryLessonStatus,
-    };
-    use crate::core::data::{LessonStatus, NewPhrase};
+    use crate::core::backend::lesson::{QueryLessonStatus, QueryPracticeCards};
+    use crate::core::backend::{connect, get_users, read_phrases, read_user_lesson, InsertLesson};
+    use crate::core::data::lesson_status::LessonStatus;
+    use crate::core::data::NewPhrase;
 
     pub fn today_at_3am(db: &rusqlite::Connection) -> Result<f64, rusqlite::Error> {
         db.query_row(
@@ -158,18 +156,26 @@ mod tests {
         assert_eq!(phrase_ids.len(), 2);
         let mut now = today_at_3am + 0.11;
         {
+            let lesson_status = QueryLessonStatus {
+                lesson_id: lesson.lesson_id,
+                now,
+            }
+            .apply(&conn)
+            .expect("Failed to fetch lesson status");
             assert_eq!(
-                QueryLessonStatus {
-                    lesson_id: lesson.lesson_id,
-                    now,
-                }
-                .apply(&conn)
-                .expect("Failed to fetch lesson status"),
+                lesson_status,
                 LessonStatus {
                     ready: 2,
                     learned: 0
                 }
             );
+            let practice_cards = QueryPracticeCards {
+                lesson_id: lesson.lesson_id,
+                now,
+            }
+            .apply(&conn)
+            .expect("Failed to fetch practice cards");
+            assert_eq!(practice_cards.len(), 2);
         }
         now += 0.01;
         {

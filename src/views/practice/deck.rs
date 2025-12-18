@@ -1,6 +1,5 @@
-use crate::core::api::DrillPoint;
-use crate::views::practice::card::{Card, Goal};
-use rand::prelude::{SliceRandom, StdRng};
+use crate::core::data::card::{Card, Goal};
+use rand::prelude::StdRng;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Deck {
@@ -11,37 +10,7 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn turns_remaining(&self) -> usize {
-        let card_turns = self
-            .cards
-            .iter()
-            .fold(0, |acc, card| acc + card.turns_remaining());
-        self.top.turns_remaining() + card_turns
-    }
-
-    pub fn new(drills: Vec<DrillPoint>, rng: StdRng) -> Self {
-        let mut cards = drills.into_iter().map(Card::new).collect::<Vec<_>>();
-        let top = cards.pop().unwrap();
-        let deck = Self {
-            rng,
-            top,
-            cards,
-            mastered: false,
-        };
-        deck
-    }
-    pub fn start(self) -> Self {
-        let Self {
-            mut rng,
-            top,
-            mut cards,
-            ..
-        } = self;
-        cards.push(top);
-        for card in cards.iter_mut() {
-            card.goal = Goal::Learn;
-        }
-        cards.shuffle(&mut rng);
+    pub fn from_cards(mut cards: Vec<Card>, rng: StdRng) -> Self {
         let top = cards.pop().unwrap();
         Self {
             rng,
@@ -49,6 +18,13 @@ impl Deck {
             cards,
             mastered: false,
         }
+    }
+    pub fn turns_remaining(&self) -> usize {
+        let card_turns = self
+            .cards
+            .iter()
+            .fold(0, |acc, card| acc + card.turns_remaining());
+        self.top.turns_remaining() + card_turns
     }
     pub fn next(self) -> Self {
         self.fail()
