@@ -10,16 +10,17 @@ pub mod deck;
 #[component]
 pub fn Practice() -> Element {
     rsx! {
-        div { class: "container",
-            div { class: "section",
-                h1 { class: "title", "Practice" }
-                h2 { class: "subtitle", "Practice your reading skills" }
-            }
-            div { class: "section",
-                SessionSection {}
+        div { class: "footer",
+            div { class: "container",
+                div { class: "block",
+                    h1 { class: "title", "Reading Practice" }
+                    h2 { class: "subtitle", "Exercise your reading skills" }
+                }
+                div { class: "block",
+                    SessionSection {}
+                }
             }
         }
-        footer { class: "footer" }
     }
 }
 
