@@ -122,10 +122,10 @@ fn PromptSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
     rsx! {
         div { class: "card",
             div { class: "card-content",
-                nav { class: "level",
+                nav { class: "level is-mobile",
                     div { class: "level-left",
                         div { class: "level-item",
-                            span { class: "subtitle is-6 has-text-grey-light", "Read and translate"}
+                            span { class: "heading", "Read and translate"}
                         }
                     }
                     div { class: "level-right",
@@ -234,7 +234,7 @@ fn BackContent(card: Card, turns: usize) -> Element {
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>();
     rsx! {
-        nav { class: "level",
+        nav { class: "level is-mobile",
             div { class: "level-left",
                 div { class: "level-item",
                     span { class: "tag is-info is-large", "{tag}"}
