@@ -13,12 +13,14 @@ pub fn TodaySection(lesson_id: i64) -> Element {
     let mut lesson_status =
         use_loader(move || async move { query_lesson_status(lesson_id).await })?;
 
-    let mut record_practice = use_action(move |cards: Vec<Card>| async move {
-        update_practice_cards(cards).await?;
+    let mut record_practice = use_action(move |_| async move {
         *practicing.write() = false;
         lesson_status.restart();
         Ok(()) as Result<()>
     });
+
+    let mut record_pass =
+        use_action(move |card: Card| async move { update_practice_cards(vec![card]).await });
 
     rsx! {
         TodayLessonStatus{ lesson_status, practicing: practicing.clone() }
@@ -36,7 +38,8 @@ pub fn TodaySection(lesson_id: i64) -> Element {
                     footer { class: "modal-card-foot",
                         div { class: "container",
                             PracticeSessionSection {
-                                onsave: move |cards| record_practice.call(cards)
+                                onsave: move |cards| record_practice.call(cards),
+                                onpass: move |card| record_pass.call(card),
                             }
                         }
                     }

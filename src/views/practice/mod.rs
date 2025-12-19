@@ -1,4 +1,4 @@
-use crate::core::data::card::Card;
+use crate::core::data::card::{Card, Goal};
 use crate::core::data::{lesson_view, query_practice_cards};
 use deck::Deck;
 use dioxus::prelude::*;
@@ -17,7 +17,10 @@ enum SessionState {
 }
 
 #[component]
-pub fn PracticeSessionSection(onsave: Option<EventHandler<Vec<Card>>>) -> Element {
+pub fn PracticeSessionSection(
+    onsave: EventHandler<Vec<Card>>,
+    onpass: EventHandler<Card>,
+) -> Element {
     let mut session = use_signal(|| SessionState::Start);
 
     let mut start_action = use_action(move |_input: ()| async move {
@@ -70,15 +73,9 @@ pub fn PracticeSessionSection(onsave: Option<EventHandler<Vec<Card>>>) -> Elemen
                     class: "button is-primary",
                     onclick: move |_| {
                         *session.write() = SessionState::Start;
-                        if let Some(onsave) = onsave {
-                            onsave.call(deck.cards.clone());
-                        }
+                        onsave.call(deck.cards.clone());
                     },
-                    if onsave.is_some() {
-                        "Save"
-                    } else {
-                        "Done"
-                    }
+                    "Done"
                 }
             }
         },
@@ -89,7 +86,7 @@ pub fn PracticeSessionSection(onsave: Option<EventHandler<Vec<Card>>>) -> Elemen
             LearnSection { deck, session }
         },
         SessionState::Check { deck } => rsx! {
-            CheckSection { deck, session }
+            CheckSection { deck, session, onpass }
         },
     }
 }
@@ -163,7 +160,11 @@ fn LearnSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
 }
 
 #[component]
-fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
+fn CheckSection(
+    deck: Deck,
+    session: WriteSignal<SessionState>,
+    onpass: EventHandler<Card>,
+) -> Element {
     let card = deck.top.clone();
     let turns = deck.turns_remaining();
     rsx! {
@@ -186,6 +187,10 @@ fn CheckSection(deck: Deck, session: WriteSignal<SessionState>) -> Element {
                     onclick: {
                         let deck = deck.clone();
                         move |_| {
+                            let card = deck.top.clone();
+                            if card.goal == Goal::Review {
+                                onpass.call(card);
+                            }
                             let deck = deck.clone().pass();
                             *session.write() = if deck.mastered {
                                 SessionState::Done { deck }
