@@ -1,4 +1,4 @@
-use crate::core::data::card::{Card, Goal};
+use crate::core::data::card::Card;
 use crate::core::data::{lesson_view, query_practice_cards};
 use deck::Deck;
 use dioxus::prelude::*;
@@ -32,6 +32,7 @@ pub fn PracticeSessionSection(
         *session.write() = SessionState::Prompt { deck };
         Ok(()) as Result<()>
     });
+
     match session() {
         SessionState::Start => rsx! {
             button {
@@ -49,19 +50,25 @@ pub fn PracticeSessionSection(
                     div { class: "field is-grouped is-grouped-multiline",
                         div { class: "control",
                             div { class: "tags has-addons",
-                                span { class: "tag is-dark", "Passed"}
+                                span { class: "tag is-dark", "Passes"}
                                 span { class: "tag is-success", "{deck.stats.passed}"}
                             }
                         }
                         div { class: "control",
                             div { class: "tags has-addons",
-                                span { class: "tag is-dark", "Failed"}
+                                span { class: "tag is-dark", "Fails"}
                                 span { class: "tag is-warning", "{deck.stats.failed}"}
                             }
                         }
                         div { class: "control",
                             div { class: "tags has-addons",
-                                span { class: "tag is-dark", "Learned"}
+                                span { class: "tag is-dark", "Repeats"}
+                                span { class: "tag is-link", "{deck.stats.repeated}"}
+                            }
+                        }
+                        div { class: "control",
+                            div { class: "tags has-addons",
+                                span { class: "tag is-dark", "Learns"}
                                 span { class: "tag is-info", "{deck.stats.learned}"}
                             }
                         }
@@ -73,7 +80,7 @@ pub fn PracticeSessionSection(
                     class: "button is-primary",
                     onclick: move |_| {
                         *session.write() = SessionState::Start;
-                        onsave.call(deck.cards.clone());
+                        onsave.call(deck.clone().into_cards());
                     },
                     "Done"
                 }
@@ -187,12 +194,21 @@ fn CheckSection(
                     onclick: {
                         let deck = deck.clone();
                         move |_| {
-                            let card = deck.top.clone();
-                            if card.goal == Goal::Review {
-                                onpass.call(card);
-                            }
+                            let deck = deck.clone().repeat();
+                            *session.write() = SessionState::Prompt { deck};
+
+                        }
+                    },
+                    "Repeat"
+                }
+                a { class: "card-footer-item",
+                    href: "#",
+                    onclick: {
+                        let deck = deck.clone();
+                        move |_| {
+                            onpass.call(deck.top.clone());
                             let deck = deck.clone().pass();
-                            *session.write() = if deck.mastered {
+                            *session.write() = if deck.is_all_passed() {
                                 SessionState::Done { deck }
                             } else {
                                 SessionState::Prompt { deck}
