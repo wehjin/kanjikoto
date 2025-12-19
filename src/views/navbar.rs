@@ -3,7 +3,6 @@ use dioxus::prelude::*;
 
 const LOGO_IMG: Asset = asset!("/assets/PlaygroundImage4.jpg");
 
-/// The Navbar component that will be rendered on all pages of our app since every page is under the layout.
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
@@ -19,6 +18,8 @@ pub fn Navbar() -> Element {
                 }
             }
         }
-        Outlet::<Route> {}
+        section { class: "section is-fullheight-with-navbar",
+            Outlet::<Route> {}
+        }
     }
 }

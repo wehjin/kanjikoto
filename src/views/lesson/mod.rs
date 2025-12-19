@@ -20,47 +20,44 @@ pub fn Lesson() -> Element {
         current_lesson.restart();
         Ok(()) as Result<()>
     });
-    rsx! {
-        footer { class: "footer",
-            match current_lesson() {
-                None => rsx! {
-                    div { class: "block",
-                        h1 { class: "title",
-                            "Lesson"
-                            button { class: "button ml-5",
-                                onclick:  move |_| *show_import_dialog.write() = true,
-                                "Import"
-                            }
-                        }
-                    }
-                    if show_import_dialog.read().clone() {
-                        ImportDialog{
-                            importing: show_import_dialog,
-                            onimport: move |details| async move {
-                                import_csv.call(details);
-                            },
-                        }
-                    }
-                },
-                Some(lesson) => rsx! {
-                    div { class: "block",
-                        h1{ class: "title", {lesson.title} }
-                    }
-                    LessonTabs{ current_tab }
-                    match current_tab() {
-                        LessonTab::Today => rsx! {
-                            TodaySection { lesson_id: lesson.lesson_id }
-                        },
-                        LessonTab::Phrases => rsx! {
-                            if lesson.phrases.is_empty() {
-                                "No phrases yet"
-                            } else {
-                                PhraseTable{ phrases: lesson.phrases }
-                            }
-                        },
+
+    match current_lesson() {
+        None => rsx! {
+            div { class: "block",
+                h1 { class: "title",
+                    "Lesson"
+                    button { class: "button ml-5",
+                        onclick:  move |_| *show_import_dialog.write() = true,
+                        "Import"
                     }
                 }
             }
-        }
+            if show_import_dialog.read().clone() {
+                ImportDialog{
+                    importing: show_import_dialog,
+                    onimport: move |details| async move {
+                        import_csv.call(details);
+                    },
+                }
+            }
+        },
+        Some(lesson) => rsx! {
+            div { class: "block",
+                h1{ class: "title", {lesson.title} }
+            }
+            LessonTabs{ current_tab }
+            match current_tab() {
+                LessonTab::Today => rsx! {
+                    TodaySection { lesson_id: lesson.lesson_id }
+                },
+                LessonTab::Phrases => rsx! {
+                    if lesson.phrases.is_empty() {
+                        "No phrases yet"
+                    } else {
+                        PhraseTable{ phrases: lesson.phrases }
+                    }
+                },
+            }
+        },
     }
 }

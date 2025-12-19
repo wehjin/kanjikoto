@@ -5,14 +5,12 @@ use dioxus::prelude::*;
 pub fn Home() -> Element {
     let nav = use_navigator();
     rsx! {
-        section { class: "section is-fullheight",
-            div { class: "container",
-                h1 { class: "title", "Home"}
-                button {
-                    class: "button is-primary",
-                    onclick: move |_| { nav.push(Route::Lesson {}); },
-                    "Lesson"
-                }
+        div { class: "container",
+            h1 { class: "title", "Home"}
+            button {
+                class: "button is-primary",
+                onclick: move |_| { nav.push(Route::Lesson {}); },
+                "Lesson"
             }
         }
     }
