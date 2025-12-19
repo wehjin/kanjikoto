@@ -7,27 +7,6 @@ use rand::SeedableRng;
 
 pub mod deck;
 
-#[component]
-pub fn Practice() -> Element {
-    rsx! {
-        div { class: "footer",
-            div { class: "container",
-                div { class: "block",
-                    h1 { class: "title", "Reading Practice" }
-                    h2 { class: "subtitle", "Exercise your reading skills" }
-                }
-                div { class: "block",
-                    div { class: "columns",
-                        div { class: "column is-half-tablet is-one-third-desktop",
-                            PracticeSessionSection {}
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum SessionState {
     Start,

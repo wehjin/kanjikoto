@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use views::{Answers, Lesson, Navbar, Practice, Review, Start};
+use views::{Home, Lesson, Navbar, Start};
 
 mod components;
 mod core;
@@ -10,15 +10,11 @@ mod views;
 enum Route {
     #[layout(Navbar)]
     #[route("/")]
-    Review {},
-    #[route("/answers/:seed")]
-    Answers { seed: usize },
-    #[route("/practice")]
-    Practice {},
-    #[route("/start")]
-    Start {},
+    Home {},
     #[route("/lesson")]
     Lesson {},
+    #[route("/start")]
+    Start {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
@@ -26,8 +22,6 @@ enum Route {
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 fn main() {
-    // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
-    // you have enabled
     dioxus::launch(App);
 }
 

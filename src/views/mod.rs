@@ -7,14 +7,10 @@ pub use navbar::Navbar;
 mod start;
 pub use start::Start;
 
-mod review;
-pub use review::Review;
+mod home;
+pub use home::Home;
 
-mod answers;
-pub use answers::Answers;
-
-mod practice;
-pub use practice::Practice;
+pub mod practice;
 
 mod lesson;
 pub use lesson::Lesson;

@@ -1,9 +1,3 @@
-const API_URL: &str = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQjXD1Z1nrpTS60VhvlyI3Gha7bS-XP1r_nv3ITYbw4JBL-FA8SB6irRsVHhlEje5ZZT_H8uwFuRGgw/pub?gid=0&single=true&output=csv";
-
-pub async fn get_drills() -> Vec<DrillPoint> {
-    get_drills_url(API_URL).await
-}
-
 pub async fn get_drills_url(url: &str) -> Vec<DrillPoint> {
     let csv = reqwest::get(url).await.unwrap().text().await.unwrap();
     let rows = parse_rows(csv);
@@ -56,14 +50,6 @@ impl DrillPoint {
             kanji: kanji_segments.join(""),
             yomi: yomi_segments.join(""),
         }
-    }
-
-    pub fn to_meanings(&self) -> Vec<String> {
-        self.meaning
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>()
     }
 }
 
