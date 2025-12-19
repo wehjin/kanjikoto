@@ -18,7 +18,7 @@ pub struct Card {
 impl Card {
     pub fn turns_remaining(&self) -> usize {
         match self.goal {
-            Goal::Learn => 2,
+            Goal::Learn => 1,
             Goal::Review => 1,
             Goal::Celebrate => 0,
         }
