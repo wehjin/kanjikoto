@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub const SESSION_SIZE: usize = 5;
+pub const SESSION_SIZE: usize = 20;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LessonStatus {
